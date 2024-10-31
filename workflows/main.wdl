@@ -1,13 +1,13 @@
 version 1.0
 
-# Harmonized workflow entrypoint
+# Harmonized human PMDBS sc/sn RNAseq workflow entrypoint
 
 import "../wf-common/wdl/structs.wdl"
 import "../wf-common/wdl/tasks/get_workflow_metadata.wdl" as GetWorkflowMetadata
 import "preprocess/preprocess.wdl" as Preprocess
 import "cohort_analysis/cohort_analysis.wdl" as CohortAnalysis
 
-workflow harmonized_pmdbs_analysis {
+workflow pmdbs_sc_rnaseq_analysis {
 	input {
 		String cohort_id
 		Array[Project] projects
@@ -35,9 +35,9 @@ workflow harmonized_pmdbs_analysis {
 	}
 
 	String workflow_execution_path = "workflow_execution"
-	String workflow_name = "harmonized_pmdbs"
+	String workflow_name = "pmdbs_sc_rnaseq"
 	String workflow_version = "v2.1.0"
-	String workflow_release = "https://github.com/ASAP-CRN/harmonized-wf-dev/releases/tag/harmonized_pmdbs_analysis-~{workflow_version}"
+	String workflow_release = "https://github.com/ASAP-CRN/harmonized-wf-dev/releases/tag/pmdbs_sc_rnaseq_analysis-~{workflow_version}"
 
 	call GetWorkflowMetadata.get_workflow_metadata {
 		input:
@@ -45,7 +45,7 @@ workflow harmonized_pmdbs_analysis {
 	}
 
 	scatter (project in projects) {
-		String project_raw_data_path_prefix = "~{project.raw_data_bucket}/~{workflow_execution_path}"
+		String project_raw_data_path_prefix = "~{project.raw_data_bucket}/~{workflow_execution_path}/~{workflow_name}"
 
 		call Preprocess.preprocess {
 			input:
@@ -217,7 +217,7 @@ workflow harmonized_pmdbs_analysis {
 	}
 
 	meta {
-		description: "Harmonized postmortem-derived brain sequencing (PMDBS) workflow"
+		description: "Harmonized human postmortem-derived brain sequencing (PMDBS) sc/sn RNA-seq workflow"
 	}
 
 	parameter_meta {
