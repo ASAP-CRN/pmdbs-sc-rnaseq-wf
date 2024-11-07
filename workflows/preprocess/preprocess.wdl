@@ -378,7 +378,11 @@ task counts_to_adata {
 	input {
 		String sample_id
 		String batch
+
+		# JAH hack here
 		String project_id
+		String dataset_id
+		String team_id
 
 		File cellbender_counts
 
@@ -394,11 +398,12 @@ task counts_to_adata {
 	command <<<
 		set -euo pipefail
 
-		python3 /opt/scripts/main/preprocess.py \
+		python3 /opt/scripts/main/prep_metadata.py \
 			--adata-input ~{cellbender_counts} \
 			--sample-id ~{sample_id} \
 			--batch ~{batch} \
-			--project ~{project_id} \
+			--dataset ~{dataset_id} \
+			--team ~{team_id} \
 			--adata-output ~{sample_id}.adata_object.h5ad
 
 		upload_outputs \
