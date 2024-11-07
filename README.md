@@ -94,20 +94,23 @@ The inputs JSON may be generated manually, however when running a large number o
     - `sample_id`: A unique identifier for the sample within the project
     - `batch`: The sample's batch
     - `fastq_path`: The directory in which paired sample FASTQs may be found, including the gs:// bucket name and path
-- `fastq-locs-txt`: FASTQ locations for all samples provided in the `project-tsv`, one per line. Each sample is expected to have one set of paired fastqs located at `${fastq_path}/${sample_id}*`. The read 1 file should include 'R1' somewhere in the filename; the read 2 file should inclue 'R2' somewhere in the filename. Generate this file e.g. by running `gsutil ls gs://fastq_bucket/some/path/**.fastq.gz >> fastq_locs.txt`
+        - This is appended to the `project-tsv` from the `fastq-locs-txt`: FASTQ locations for all samples provided in the `project-tsv`, one per line. Each sample is expected to have one set of paired fastqs located at `${fastq_path}/${sample_id}*`. The read 1 file should include 'R1' somewhere in the filename; the read 2 file should inclue 'R2' somewhere in the filename. Generate this file e.g. by running `gsutil ls gs://fastq_bucket/some/path/**.fastq.gz >> fastq_locs.txt`
 - `inputs-template`: The inputs template JSON file into which the `projects` information derived from the `project-tsv` will be inserted. Must have a key ending in `*.projects`. Other default values filled out in the inputs template will be written to the output inputs.json file.
-- `run-project-cohort-analysis`: Optionally run project-level cohort analysis for provided projects. This value will apply to all projcets. [false]
-- `output-file`: Optional output file name. [inputs.json]
+- `run-project-cohort-analysis`: Optionally run project-level cohort analysis for provided projects. This value will apply to all projects. [false]
+- `workflow_name`: WDL workflow name.
+- `cohort-dataset`: Dataset name in cohort bucket name (e.g. 'sc-rnaseq').
+- `output-file-prefix`: Optional output file prefix name. [inputs.{cohort_staging_bucket_type}.{source}-{cohort_dataset}.{date}.json]
 
 Example usage:
 
 ```bash
 ./wf-common/util/generate_inputs \
-    --project-tsv sample_info.tsv \
-    --fastq-locs-txt fastq_locs.txt \
+    --project-tsv metadata.tsv \
     --inputs-template workflows/inputs.json \
     --run-project-cohort-analysis \
-    --output-file harmony_workflow_inputs.json
+    --workflow-name pmdbs_bulk_rnaseq_analysis \
+    --cohort-dataset sc-rnaseq \
+    --output-file inputs.harmonized_sc_rnaseq_workflow.json
 ```
 
 # Outputs
@@ -224,7 +227,7 @@ This script compiles bucket and file information for both the initial (staging) 
 
 If data integrity tests pass, this script will upload a combined MANIFEST.tsv and the data promotion Markdown report under a metadata/{timestamp} directory in the staging bucket. Previous manifest files and reports will be kept. Next, it will rsync all files in the staging bucket to the curated bucket's preprocess, cohort_analysis, and metadata directories. **Exercise caution when using this script**; files that are not present in the source (staging) bucket will be deleted at the destination (curated) bucket.
 
-If data integrity tests fail, staging data cannot be promoted. The combined MANFIEST.tsv and Markdown report will be locally available.
+If data integrity tests fail, staging data cannot be promoted. The combined MANFIEST.tsv, Markdown report, and promote_staging_data_script.log will be locally available.
 
 The script defaults to a dry run, printing out the files that would be copied or deleted for each selected team.
 
@@ -232,27 +235,26 @@ The script defaults to a dry run, printing out the files that would be copied or
 
 ```bash
 -h  Display this message and exit
--t  Comma-separated set of teams to promote data for
--a  Promote all teams' data
+-t  Space-delimited team(s) to promote data for
 -l  List available teams
+-s  Source name in bucket name
+-d  Space-delimited dataset name(s) in team bucket name, must follow the same order as {team}
+-w  Workflow name used as a directory in bucket
 -p  Promote data. If this option is not selected, data that would be copied or deleted is printed out, but files are not actually changed (dry run)
--s  Staging bucket type; options are 'uat' or 'dev' ['uat']
+-e  Staging bucket type; options are 'uat' or 'dev' ['uat']
 ```
 
 ### Usage
 
 ```bash
 # List available teams
-./wf-common/util/promote_staging_data -l
+./wf-common/util/promote_staging_data -t cohort -l -s pmdbs -d sc-rnaseq -w pmdbs_sc_rnaseq
 
 # Print out the files that would be copied or deleted from the staging bucket to the curated bucket for teams team-hafler, team-lee, and cohort
-./wf-common/util/promote_staging_data -t team-hafler,team-lee,cohort
+./wf-common/util/promote_staging_data -t team-hafler team-lee cohort -s pmdbs -d sc-rnaseq -w pmdbs_sc_rnaseq
 
-# Promote data for team-hafler, team-hardy, team-jakobsson, team-lee, team-scherzer, team-sulzer, and cohort
-./wf-common/util/promote_staging_data -a -p -s dev
-
-# Print out the files that would be copied or deleted from the staging bucket to the curated bucket for unembargoed cohort (team-hafler, team-lee, team-jakobsson, and team-scherzer)
-./wf-common/util/promote_staging_data -t cohort
+# Promote data for team-scherzer, team-sulzer, and cohort
+./wf-common/util/promote_staging_data -t team-scherzer team-sulzer cohort -s pmdbs -d sc-rnaseq -w pmdbs_sc_rnaseq -p -e dev
 ```
 
 # Docker images
