@@ -1,12 +1,13 @@
 version 1.0
 
-# Harmonized workflow entrypoint
+# Harmonized human PMDBS sc/sn RNAseq workflow entrypoint
 
-import "structs.wdl"
+import "../wf-common/wdl/structs.wdl"
+import "../wf-common/wdl/tasks/get_workflow_metadata.wdl" as GetWorkflowMetadata
 import "preprocess/preprocess.wdl" as Preprocess
 import "cohort_analysis/cohort_analysis.wdl" as CohortAnalysis
 
-workflow harmonized_pmdbs_analysis {
+workflow pmdbs_sc_rnaseq_analysis {
 	input {
 		String cohort_id
 		Array[Project] projects
@@ -34,14 +35,17 @@ workflow harmonized_pmdbs_analysis {
 	}
 
 	String workflow_execution_path = "workflow_execution"
+	String workflow_name = "pmdbs_sc_rnaseq"
+	String workflow_version = "v2.1.0"
+	String workflow_release = "https://github.com/ASAP-CRN/pmdbs-sc-rnaseq-wf/releases/tag/pmdbs_sc_rnaseq_analysis-~{workflow_version}"
 
-	call get_workflow_metadata {
+	call GetWorkflowMetadata.get_workflow_metadata {
 		input:
 			zones = zones
 	}
 
 	scatter (project in projects) {
-		String project_raw_data_path_prefix = "~{project.raw_data_bucket}/~{workflow_execution_path}"
+		String project_raw_data_path_prefix = "~{project.raw_data_bucket}/~{workflow_execution_path}/~{workflow_name}"
 
 		call Preprocess.preprocess {
 			input:
@@ -49,6 +53,9 @@ workflow harmonized_pmdbs_analysis {
 				samples = project.samples,
 				cellranger_reference_data = cellranger_reference_data,
 				cellbender_fpr = cellbender_fpr,
+				workflow_name = workflow_name,
+				workflow_version = workflow_version,
+				workflow_release = workflow_release,
 				run_timestamp = get_workflow_metadata.timestamp,
 				raw_data_path_prefix = project_raw_data_path_prefix,
 				billing_project = get_workflow_metadata.billing_project,
@@ -85,6 +92,9 @@ workflow harmonized_pmdbs_analysis {
 					cell_type_markers_list = cell_type_markers_list,
 					groups = groups,
 					features = features,
+					workflow_name = workflow_name,
+					workflow_version = workflow_version,
+					workflow_release = workflow_release,
 					run_timestamp = get_workflow_metadata.timestamp,
 					raw_data_path_prefix = project_raw_data_path_prefix,
 					staging_data_buckets = project.staging_data_buckets,
@@ -110,6 +120,9 @@ workflow harmonized_pmdbs_analysis {
 				cell_type_markers_list = cell_type_markers_list,
 				groups = groups,
 				features = features,
+				workflow_name = workflow_name,
+				workflow_version = workflow_version,
+				workflow_release = workflow_release,
 				run_timestamp = get_workflow_metadata.timestamp,
 				raw_data_path_prefix = cohort_raw_data_path_prefix,
 				staging_data_buckets = cohort_staging_data_buckets,
@@ -204,7 +217,7 @@ workflow harmonized_pmdbs_analysis {
 	}
 
 	meta {
-		description: "Harmonized postmortem-derived brain sequencing (PMDBS) workflow"
+		description: "Harmonized human postmortem-derived brain sequencing (PMDBS) sc/sn RNA-seq workflow"
 	}
 
 	parameter_meta {
@@ -223,37 +236,5 @@ workflow harmonized_pmdbs_analysis {
 		features: {help: "Features to produce umap plots for. ['n_genes_by_counts', 'total_counts', 'pct_counts_mt', 'pct_counts_rb', 'doublet_score', 'S_score', 'G2M_score']"}
 		container_registry: {help: "Container registry where workflow Docker images are hosted."}
 		zones: {help: "Space-delimited set of GCP zones to spin up compute in."}
-	}
-}
-
-task get_workflow_metadata {
-	input {
-		String zones
-	}
-
-	command <<<
-		set -euo pipefail
-
-		# UTC timestamp for the running workflow
-		date -u +"%FT%H-%M-%SZ" > timestamp.txt
-
-		# Billing project to use for file requests (matches the billing project used for compute)
-		curl "http://metadata.google.internal/computeMetadata/v1/project/project-id" \
-				-H "Metadata-Flavor: Google" \
-		> billing_project.txt
-	>>>
-
-	output {
-		String timestamp = read_string("timestamp.txt")
-		String billing_project = read_string("billing_project.txt")
-	}
-
-	runtime {
-		docker: "gcr.io/google.com/cloudsdktool/google-cloud-cli:444.0.0-slim"
-		cpu: 2
-		memory: "4 GB"
-		disks: "local-disk 10 HDD"
-		preemptible: 3
-		zones: zones
 	}
 }
