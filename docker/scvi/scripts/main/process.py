@@ -35,7 +35,6 @@ parser.add_argument(
     "--marker-genes",
     dest="marker_genes",
     type=str,
-    default="resources/celltype_marker_table.csv", # this doesn't seem accurate
     help="Path to marker_genes .csv file",
 )
 parser.add_argument(
