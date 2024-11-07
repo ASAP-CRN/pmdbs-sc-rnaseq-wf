@@ -2,8 +2,9 @@ version 1.0
 
 # Run steps in the cohort analysis
 
+import "../../wf-common/wdl/tasks/write_cohort_sample_list.wdl" as WriteCohortSampleList
 import "cluster_data/cluster_data.wdl" as ClusterData
-import "../common/upload_final_outputs.wdl" as UploadFinalOutputs
+import "../../wf-common/wdl/tasks/upload_final_outputs.wdl" as UploadFinalOutputs
 
 workflow cohort_analysis {
 	input {
@@ -24,6 +25,9 @@ workflow cohort_analysis {
 		Array[String] groups
 		Array[String] features
 
+		String workflow_name
+		String workflow_version
+		String workflow_release
 		String run_timestamp
 		String raw_data_path_prefix
 		Array[String] staging_data_buckets
@@ -32,14 +36,14 @@ workflow cohort_analysis {
 		String zones
 	}
 
-	String workflow_name = "cohort_analysis"
-	String workflow_version = "2.1.0"
+	String sub_workflow_name = "cohort_analysis"
+	String sub_workflow_version = "2.1.0"
 
-	Array[Array[String]] workflow_info = [[run_timestamp, workflow_name, workflow_version]]
+	Array[Array[String]] workflow_info = [[run_timestamp, workflow_name, workflow_version, workflow_release]]
 
-	String raw_data_path = "~{raw_data_path_prefix}/~{workflow_name}/~{workflow_version}/~{run_timestamp}"
+	String raw_data_path = "~{raw_data_path_prefix}/~{sub_workflow_name}/~{sub_workflow_version}/~{run_timestamp}"
 
-	call write_cohort_sample_list {
+	call WriteCohortSampleList.write_cohort_sample_list {
 		input:
 			cohort_id = cohort_id,
 			project_sample_ids = project_sample_ids,
@@ -63,6 +67,7 @@ workflow cohort_analysis {
 
 	call filter_and_normalize {
 		input:
+			cohort_id = cohort_id,
 			merged_adata_object = merge_and_plot_qc_metrics.merged_adata_object, #!FileCoercion
 			qc_validation_metrics = merge_and_plot_qc_metrics.qc_validation_metrics,
 			n_top_genes = n_top_genes,
@@ -140,7 +145,8 @@ workflow cohort_analysis {
 		],
 		[
 			integrate_harmony_and_artifact_metrics.harmony_integrated_adata_object,
-			integrate_harmony_and_artifact_metrics.scib_report_results_csv
+			integrate_harmony_and_artifact_metrics.scib_report_results_csv,
+			integrate_harmony_and_artifact_metrics.scib_report_results_svg
 		],
 		[
 			plot_groups_and_features.groups_umap_plot_png,
@@ -152,7 +158,7 @@ workflow cohort_analysis {
 		input:
 			output_file_paths = cohort_analysis_final_output_paths,
 			staging_data_buckets = staging_data_buckets,
-			staging_data_path = workflow_name,
+			staging_data_path = sub_workflow_name,
 			billing_project = billing_project,
 			zones = zones
 	}
@@ -178,6 +184,7 @@ workflow cohort_analysis {
 		# PCA and Harmony integrated adata objects and artifact metrics
 		File harmony_integrated_adata_object = integrate_harmony_and_artifact_metrics.harmony_integrated_adata_object #!FileCoercion
 		File scib_report_results_csv = integrate_harmony_and_artifact_metrics.scib_report_results_csv #!FileCoercion
+		File scib_report_results_svg = integrate_harmony_and_artifact_metrics.scib_report_results_svg #!FileCoercion
 
 		# Groups and features plots
 		File groups_umap_plot_png = plot_groups_and_features.groups_umap_plot_png #!FileCoercion
@@ -185,46 +192,6 @@ workflow cohort_analysis {
 
 		Array[File] preprocess_manifest_tsvs = upload_preprocess_files.manifests #!FileCoercion
 		Array[File] cohort_analysis_manifest_tsvs = upload_cohort_analysis_files.manifests #!FileCoercion
-	}
-}
-
-# Upload the list of samples used for this cohort analysis to the output bucket
-task write_cohort_sample_list {
-	input {
-		String cohort_id
-		Array[Array[String]] project_sample_ids
-
-		String raw_data_path
-		Array[Array[String]] workflow_info
-		String billing_project
-		String container_registry
-		String zones
-	}
-
-	command <<<
-		set -euo pipefail
-
-		echo -e "project_id\tsample_id" > ~{cohort_id}.sample_list.tsv
-		cat ~{write_tsv(project_sample_ids)} >> ~{cohort_id}.sample_list.tsv
-
-		upload_outputs \
-			-b ~{billing_project} \
-			-d ~{raw_data_path} \
-			-i ~{write_tsv(workflow_info)} \
-			-o "~{cohort_id}.sample_list.tsv"
-	>>>
-
-	output {
-		String cohort_sample_list = "~{raw_data_path}/~{cohort_id}.sample_list.tsv"
-	}
-
-	runtime {
-		docker: "~{container_registry}/util:1.1.0"
-		cpu: 1
-		memory: "1 GB"
-		disks: "local-disk 10 HDD"
-		preemptible: 3
-		zones: zones
 	}
 }
 
@@ -302,6 +269,7 @@ task merge_and_plot_qc_metrics {
 
 task filter_and_normalize {
 	input {
+		String cohort_id
 		File merged_adata_object
 		File qc_validation_metrics
 
@@ -343,11 +311,13 @@ task filter_and_normalize {
 				--marker-genes ~{cell_type_markers_list} \
 				--output-validation-file ~{qc_validation_metrics}
 
+			mv "~{qc_validation_metrics}" "~{cohort_id}.final_validation_metrics.csv"
+
 			upload_outputs \
 				-b ~{billing_project} \
 				-d ~{raw_data_path} \
 				-i ~{write_tsv(workflow_info)} \
-				-o ~{qc_validation_metrics}
+				-o "~{cohort_id}.final_validation_metrics.csv"
 
 			echo true > cells_remaining_post_filter.txt
 		else
@@ -358,7 +328,7 @@ task filter_and_normalize {
 	output {
 		File? filtered_adata_object = if read_boolean("cells_remaining_post_filter.txt") then "~{merged_adata_object_basename}_filtered.h5ad" else my_none
 		File? normalized_adata_object = if read_boolean("cells_remaining_post_filter.txt") then "~{merged_adata_object_basename}_filtered_normalized.h5ad" else my_none
-		String? final_validation_metrics = if read_boolean("cells_remaining_post_filter.txt") then "~{raw_data_path}/~{qc_validation_metrics}" else my_none
+		String? final_validation_metrics = if read_boolean("cells_remaining_post_filter.txt") then "~{raw_data_path}/~{cohort_id}.final_validation_metrics.csv" else my_none
 	}
 
 	runtime {
@@ -387,6 +357,7 @@ task integrate_harmony_and_artifact_metrics {
 		String zones
 	}
 
+	String cell_annotated_adata_object_basename = basename(cell_annotated_adata_object, ".h5ad")
 	Int mem_gb = ceil(size(cell_annotated_adata_object, "GB") * 5 + 20)
 	Int disk_size = ceil(size(cell_annotated_adata_object, "GB") * 4 + 20)
 
@@ -397,7 +368,7 @@ task integrate_harmony_and_artifact_metrics {
 			--batch-key ~{batch_key} \
 			--adata-input ~{cell_annotated_adata_object} \
 			--adata-output ~{cohort_id}.final_adata.h5ad \
-			--output-metadata-file ~{cohort_id}.final_metadata.csv \
+			--output-metadata-file ~{cohort_id}.final_metadata.csv
 
 		python3 /opt/scripts/main/artifact_metrics.py \
 			--latent-key ~{scvi_latent_key} \
@@ -420,8 +391,9 @@ task integrate_harmony_and_artifact_metrics {
 
 	output {
 		String harmony_integrated_adata_object = "~{raw_data_path}/~{cohort_id}.final_adata.h5ad"
-		String scib_report_results_csv = "~{raw_data_path}/~{cohort_id}.final_metadata.csv"
 		String final_metadata_csv = "~{raw_data_path}/~{cohort_id}.scib_report.csv"
+		String scib_report_results_csv = "~{raw_data_path}/~{cohort_id}.final_metadata.csv"
+		String scib_report_results_svg = "~{raw_data_path}/~{cohort_id}.scib_results.svg"
 	}
 
 	runtime {
