@@ -28,27 +28,30 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+# TODO: make these cutoffs arguments...
+## Fixed Parameters
+pct_counts_mt_max = 10
+doublet_score_max = 0.2
+total_counts_limits = [100 , 100000]
+n_genes_by_counts_limits = [100, 10000]
+
 
 # Set CPUs to use for parallel computing
 scanpy._settings.ScanpyConfig.n_jobs = -1
 
 adata = scanpy.read_h5ad(args.adata_input)  # type: ignore
 
-# TODO: make these cutoffs arguments...
 # muon api is better than the scanpyt api for this...
-muon.pp.filter_obs(adata, "pct_counts_mt", lambda x: x <= 10)
-muon.pp.filter_obs(adata, "doublet_score", lambda x: x < 0.2)
-muon.pp.filter_obs(adata, "total_counts", lambda x: (x >= 100) & (x <= 100000))
-muon.pp.filter_obs(adata, "n_genes_by_counts", lambda x: (x >= 100) & (x <= 10000))
+muon.pp.filter_obs(adata, "pct_counts_mt", lambda x: x <= pct_counts_mt_max)
+muon.pp.filter_obs(adata, "doublet_score", lambda x: x < doublet_score_max)
+muon.pp.filter_obs(adata, "total_counts", lambda x: (x >= total_counts_limits[0]) & (x <= total_counts_limits[1]))
+muon.pp.filter_obs(adata, "n_genes_by_counts", lambda x: (x >= n_genes_by_counts_limits[0]) & (x <= n_genes_by_counts_limits[1]))
 
 # save the filtered adata
 adata.write_h5ad(filename=args.adata_output, compression="gzip")
 
-
 #######  validation metrics
 val_metrics = pd.read_csv(args.output_validation_file, index_col=0)
-
 output_metrics = update_validation_metrics(adata, "filter", val_metrics)
-
 # log the validation metrics
 output_metrics.to_csv(args.output_validation_file, index=True)

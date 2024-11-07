@@ -36,12 +36,6 @@ parser.add_argument(
     type=str,
     help="Output file to save AnnData object to",
 )
-parser.add_argument(
-    "--output-metadata-file",
-    dest="output_metadata_file",
-    type=str,
-    help="Output file to write metadata to",
-)
 
 
 args = parser.parse_args()
@@ -53,22 +47,25 @@ scanpy._settings.ScanpyConfig.n_jobs = -1
 # 0. load adata
 adata = scanpy.read_h5ad(args.adata_input)  # type: ignore
 
-#  1. load marker_genes
+# #  1. load marker_genes
+# alternative way to get markers:
+# https://github.com/NIH-CARD/brain-taxonomy/blob/main/markers/cellassign_card_markers.csv
+
 markers = pd.read_csv(args.marker_genes, index_col=0)
 # defensive
 markers = markers[~markers.index.duplicated(keep="first")].rename_axis(index=None)
 
-# TODO: add a check to make sure the marker genes are in the adata
-# output now many are missing...
-
 #  2. copy for cellassign
-# bdata = adata[:, markers.index].copy() #
+# bdata = adata[:, markers.index].copy() # below prevents reordering of the genes
 bdata = adata[:, adata.var.index.isin(markers.index)].copy()
 
 #  3. get size_factor and noise
-lib_size = bdata.X.sum(1)  # type: ignore
+# calculate lib_size from the full adata
+lib_size = adata.X.sum(1)  # type: ignore
 bdata.obs["size_factor"] = lib_size / np.mean(lib_size)
-# noise = ['doublet_score', 'pct_counts_mt', 'pct_counts_rb'] #, 'S.Score', 'G2M.Score']
+
+# fit the model with the following noise covariates
+noise = ['doublet_score', 'pct_counts_mt', 'pct_counts_rb'] #, 'S.Score', 'G2M.Score']
 
 #  4. model = CellAssign(bdata, marker_genes)
 scvi.external.CellAssign.setup_anndata(
@@ -76,19 +73,21 @@ scvi.external.CellAssign.setup_anndata(
     size_factor_key="size_factor",
     batch_key=args.batch_key,
     layer="counts",
-    # continuous_covariate_keys=noise
+    continuous_covariate_keys=noise
 )
 
 #  5. model.train()
 model = scvi.external.CellAssign(bdata, markers)
-plan_args = {"lr_factor": 0.05, "lr_patience": 20, "reduce_lr_on_plateau": True}
-model.train(
-    max_epochs=1000,
-    accelerator="gpu",
-    early_stopping=True,
-    plan_kwargs=plan_args,
-    early_stopping_patience=40,
-)
+
+model.train(accelerator="gpu") # use training defaults
+# plan_args = {"lr_factor": 0.05, "lr_patience": 20, "reduce_lr_on_plateau": True}
+# model.train(
+#     max_epochs=1000,
+#     accelerator="gpu",
+#     early_stopping=True,
+#     plan_kwargs=plan_args,
+#     early_stopping_patience=40,
+# )
 
 #  6. model.predict()
 bdata.obs["cellassign_types"] = model.predict().idxmax(axis=1).values
@@ -102,6 +101,8 @@ predictions = (
     .reset_index()
     .rename(columns={"index": "cells"})
 )
+
+# TODO: save to parquet instead of csv
 predictions.to_csv(
     args.cell_type_output, index=False
 )  # # pred_file = "cellassign_predictions.csv"
@@ -109,11 +110,4 @@ predictions.to_csv(
 # 9. write_h5ad
 adata.write_h5ad(filename=args.adata_output, compression="gzip")
 
-# 10. save metadata
-metatable = adata.obs 
-metatable['UMAP_1'] = adata.obsm['X_umap'][:,0]
-metatable['UMAP_2'] = adata.obsm['X_umap'][:,1]
-
-metatable.to_csv(args.output_metadata_file, index=True) 
-# adata.obs.to_csv(args.output_metadata_file, index=True) # metadata_file = "metadata.csv"
 

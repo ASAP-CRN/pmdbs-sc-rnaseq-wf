@@ -23,6 +23,9 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+### fixed parameters (TODO: make an argument)
+n_neighbors = 15 #default
+leiden_reslns = [0.05, 0.1, 0.2, 0.4]
 
 # Set CPUs to use for parallel computing
 scanpy._settings.ScanpyConfig.n_jobs = -1
@@ -30,16 +33,12 @@ scanpy._settings.ScanpyConfig.n_jobs = -1
 adata = scanpy.read_h5ad(args.adata_input)  # type: ignore
 
 # calculate neighbor graph on scVI latent
-scanpy.pp.neighbors(adata, n_neighbors=30, use_rep=args.latent_key)
+scanpy.pp.neighbors(adata, n_neighbors=n_neighbors, use_rep=args.latent_key)
 
 # do leiden
-scanpy.tl.leiden(adata, resolution=0.4)
+for resolution in leiden_reslns:
+    scanpy.tl.leiden(adata, resolution=resolution, key_added=f"leiden_res_{resolution:4.2f}")
 
 scanpy.tl.umap(adata)
-
-# Export figures
-# scanpy.pl.umap(adata, color=, size=0, save='_major_cell_type.png')
-# scanpy.pl.umap(adata, color=, size=0, save='_major_cell_type.pdf')
-
 
 adata.write_h5ad(filename=args.adata_output, compression="gzip")

@@ -43,21 +43,21 @@ args = parser.parse_args()
 # Set CPUs to use for parallel computing
 scanpy._settings.ScanpyConfig.n_jobs = -1
 
-## parameters
+## fixed parameters
 n_latent = 30
 n_layers = 1
 train_size = 0.85
 scvi_epochs = 200
-batch_size = 512
+batch_size = 1024
 # accelerator = 'gpu'
 # devide = "cuda:0"
 dispersion = "gene"
-plan_kwargs = {"lr_factor": 0.1, "lr_patience": 20, "reduce_lr_on_plateau": True}
 gene_likelihood = "zinb"
 latent_distribution = "normal"
 early_stopping = True
-early_stopping_patience = 25
-# latent_key='X_scvi'
+## DEPRICATE these training parameters. defaults are good
+# plan_kwargs = {"lr_factor": 0.1, "lr_patience": 20, "reduce_lr_on_plateau": True}
+# early_stopping_patience = 25
 
 adata = scanpy.read_h5ad(args.adata_input)  # type: ignore
 
@@ -67,10 +67,6 @@ adata = scanpy.read_h5ad(args.adata_input)  # type: ignore
 # integrate the data with `scVI`
 noise = ["doublet_score", "pct_counts_mt", "pct_counts_rb"]
 
-categorical_covariate_keys = [
-    "sample",
-    "batch",
-]  # Currently limited to single categorical... i.e. batch_key = "batch_id"
 categorical_covariate_keys = None
 
 scvi.model.SCVI.setup_anndata(
@@ -80,9 +76,6 @@ scvi.model.SCVI.setup_anndata(
     continuous_covariate_keys=noise,
     categorical_covariate_keys=categorical_covariate_keys,
 )
-
-
-# scvi.model.SCVI.setup_anndata(adata, layer='counts', batch_key=args.batch_key)
 
 
 model = scvi.model.SCVI(
@@ -97,15 +90,10 @@ model.train(
     train_size=train_size,
     max_epochs=scvi_epochs,
     early_stopping=early_stopping,
-    early_stopping_patience=early_stopping_patience,
-    plan_kwargs=plan_kwargs,
+    # early_stopping_patience=early_stopping_patience,
+    # plan_kwargs=plan_kwargs,
 )
-
 adata.obsm[args.latent_key] = model.get_latent_representation()  # type: ignore
-
-
-# make minified adata
-# TODO: impliment
 
 # artifacts
 model.save(args.output_scvi_dir, overwrite=True)

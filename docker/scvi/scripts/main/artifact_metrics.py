@@ -32,10 +32,13 @@ parser.add_argument(
     help="Output folder to save `scib` report",
 )
 
-# TODO: optional scvi arguments
-
 args = parser.parse_args()
 
+ # Fixed parameters
+n_comps = 30
+
+# Set CPUs to use for parallel computing
+scanpy._settings.ScanpyConfig.n_jobs = -1
 
 # TODO: add these functions to utility/helpers.py
 def faiss_hnsw_nn(X: np.ndarray, k: int):
@@ -75,16 +78,13 @@ adata = scanpy.read_h5ad(args.adata_input)  # type: ignore
 
 # these should be there...
 if "X_pca" not in adata.obsm:
-    scanpy.pp.pca(adata, n_comps=30)
+    scanpy.pp.pca(adata, n_comps=n_comps)
 
 if "X_pca_harmony" not in adata.obsm:
     scanpy.external.pp.harmony_integrate(adata, "sample")
 
-
 adata.obsm["Unintegrated"] = adata.obsm["X_pca"]
-
 biocons = BioConservation(isolated_labels=False)
-
 bm = Benchmarker(
     adata,
     batch_key=args.batch_key,
@@ -97,12 +97,12 @@ bm = Benchmarker(
 bm.prepare(neighbor_computer=faiss_brute_force_nn)
 bm.benchmark()
 
+# save the results
 report_dir = Path.cwd() / args.scib_report_dir
 if not report_dir.exists():
     report_dir.mkdir(parents=True, exist_ok=True)
 
 bm.plot_results_table(min_max_scale=False, save_dir=report_dir)
 
-#
 df = bm.get_results(min_max_scale=False)
 df.to_csv((report_dir / "scib_report.csv"), index=True)
