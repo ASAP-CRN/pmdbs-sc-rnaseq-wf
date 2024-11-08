@@ -10,13 +10,6 @@ parser = argparse.ArgumentParser(
     description="Compute `scib` metrics on final artefacts"
 )
 parser.add_argument(
-    "--latent-key",
-    dest="latent_key",
-    type=str,
-    default="X_scvi",
-    help="Latent key to save the scvi latent to",
-)
-parser.add_argument(
     "--batch-key",
     dest="batch_key",
     type=str,

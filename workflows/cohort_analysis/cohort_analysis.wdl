@@ -98,7 +98,6 @@ workflow cohort_analysis {
 		input:
 			cohort_id = cohort_id,
 			cell_annotated_adata_object = cluster_data.cell_annotated_adata_object,
-			scvi_latent_key = scvi_latent_key,
 			batch_key = batch_key,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
@@ -347,7 +346,6 @@ task integrate_harmony_and_artifact_metrics {
 		String cohort_id
 		File cell_annotated_adata_object
 
-		String scvi_latent_key
 		String batch_key
 
 		String raw_data_path
@@ -370,7 +368,6 @@ task integrate_harmony_and_artifact_metrics {
 			--output-metadata-file ~{cohort_id}.final_metadata.csv
 
 		python3 /opt/scripts/main/artifact_metrics.py \
-			--latent-key ~{scvi_latent_key} \
 			--batch-key ~{batch_key} \
 			--adata-input ~{cohort_id}.final.h5ad \
 			--output-report-dir scib_report_dir
