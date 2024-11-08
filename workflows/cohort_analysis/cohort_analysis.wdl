@@ -19,6 +19,7 @@ workflow cohort_analysis {
 
 		String scvi_latent_key
 		String batch_key
+		String label_key
 
 		File cell_type_markers_list
 
@@ -99,6 +100,7 @@ workflow cohort_analysis {
 			cohort_id = cohort_id,
 			cell_annotated_adata_object = cluster_data.cell_annotated_adata_object,
 			batch_key = batch_key,
+			label_key = label_key,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -308,15 +310,21 @@ task filter_and_normalize {
 				--adata-output ~{merged_adata_object_basename}_filtered_normalized.h5ad \
 				--n-top-genes ~{n_top_genes} \
 				--marker-genes ~{cell_type_markers_list} \
+				--output-all-genes ~{merged_adata_object_basename}_all_genes.csv \
+				--output-hvg-genes ~{merged_adata_object_basename}_hvg_genes.csv \
 				--output-validation-file ~{qc_validation_metrics}
 
 			mv "~{qc_validation_metrics}" "~{cohort_id}.final_validation_metrics.csv"
+			mv "~{merged_adata_object_basename}_all_genes.csv " "~{cohort_id}.all_genes.csv"
+			mv "~{merged_adata_object_basename}_hvg_genes.csv " "~{cohort_id}.hvg_genes.csv"
 
 			upload_outputs \
 				-b ~{billing_project} \
 				-d ~{raw_data_path} \
 				-i ~{write_tsv(workflow_info)} \
 				-o "~{cohort_id}.final_validation_metrics.csv"
+				-o "~{cohort_id}.all_genes.csv"
+				-o "~{cohort_id}.hvg_genes.csv"
 
 			echo true > cells_remaining_post_filter.txt
 		else
@@ -328,6 +336,7 @@ task filter_and_normalize {
 		File? filtered_adata_object = if read_boolean("cells_remaining_post_filter.txt") then "~{merged_adata_object_basename}_filtered.h5ad" else my_none
 		File? normalized_adata_object = if read_boolean("cells_remaining_post_filter.txt") then "~{merged_adata_object_basename}_filtered_normalized.h5ad" else my_none
 		String? final_validation_metrics = if read_boolean("cells_remaining_post_filter.txt") then "~{raw_data_path}/~{cohort_id}.final_validation_metrics.csv" else my_none
+		# Not sure what to add here for all_genes.csv and hvg_genes.csv ?!?
 	}
 
 	runtime {
@@ -347,6 +356,7 @@ task integrate_harmony_and_artifact_metrics {
 		File cell_annotated_adata_object
 
 		String batch_key
+		String label_key
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -369,6 +379,7 @@ task integrate_harmony_and_artifact_metrics {
 
 		python3 /opt/scripts/main/artifact_metrics.py \
 			--batch-key ~{batch_key} \
+			--label-key ~{label_key} \
 			--adata-input ~{cohort_id}.final.h5ad \
 			--output-report-dir scib_report_dir
 

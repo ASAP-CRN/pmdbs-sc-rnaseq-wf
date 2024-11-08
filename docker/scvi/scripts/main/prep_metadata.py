@@ -2,10 +2,14 @@ import argparse
 import sys
 import scanpy as sc
 from anndata import AnnData
+
 sys.path.append("/opt/scripts/utility")
 from helpers import anndata_from_h5
 
-def prep_metadata(adata:AnnData, sample_id:str, batch_id:str, dataset_id:str, team_id:str):
+
+def prep_metadata(
+    adata: AnnData, sample_id: str, batch_id: str, dataset_id: str, team_id: str
+):
     # Fixed parameters
     # Set CPUs to use for parallel computing
     sc._settings.ScanpyConfig.n_jobs = -1
@@ -29,16 +33,32 @@ def prep_metadata(adata:AnnData, sample_id:str, batch_id:str, dataset_id:str, te
     adata.obs["dataset"] = dataset_id
     # adata.obs['batch_id'] = args.project+args.batch
     adata.obs["batch_id"] = f"{team_id}_{dataset_id}_{batch_id}"  #
+    return adata
+
+
+def main(args: argparse.Namespace):
+    """
+    basic logic with args as input
+
+    """
+    # load the data from cellbender output
+    adata = anndata_from_h5(args.adata_input)
+    adata = prep_metadata(adata, args.sample_id, args.batch, args.dataset, args.team)
     adata.write_h5ad(filename=args.adata_output)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Preprocess")
     parser.add_argument(
-        "--adata-input", dest="adata_input", type=str, help="AnnData object for a dataset"
+        "--adata-input",
+        dest="adata_input",
+        type=str,
+        help="AnnData object for a dataset",
     )
     # toplevel metadata to add to the adata
-    parser.add_argument("--sample-id", dest="sample_id", type=str, help="Sample/dataset ID")
+    parser.add_argument(
+        "--sample-id", dest="sample_id", type=str, help="Sample/dataset ID"
+    )
     parser.add_argument(
         "--batch",
         dest="batch",
@@ -56,8 +76,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
-    # load the data from cellbender output
-    adata = anndata_from_h5(args.adata_input)
-    adata = prep_metadata(args.sample_id, args.batch, args.dataset, args.team)
-    adata.write_h5ad(filename=args.adata_output)
+    main(args)

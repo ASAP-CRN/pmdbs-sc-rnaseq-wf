@@ -8,10 +8,11 @@ import sys
 sys.path.append("/opt/scripts/utility")
 from helpers import get_validation_metrics
 
+
 def merge_adata(adata_objects_fofn: str) -> AnnData:
     adatas = {}
     #  note that the sample id should be the official ASAP_samples
-    with open(args.adata_objects_fofn, "r") as file:
+    with open(adata_objects_fofn, "r") as file:
         for sample in file:
             # Check that sample line is not empty
             if sample.strip():
@@ -23,6 +24,7 @@ def merge_adata(adata_objects_fofn: str) -> AnnData:
     adata = ad_concat(merge="same", uns_merge="same", index_unique="_", adatas=adatas)
 
     return adata
+
 
 def gen_qc_plots(adata: AnnData):
     # Fixed parameters
@@ -53,7 +55,23 @@ def gen_qc_plots(adata: AnnData):
         sc.pl.violin(adata, keys=metric, size=0, save="".join("_" + metric))
 
 
+def main(args: argparse.Namespace):
+    """
+    basic logic with args as input
 
+    """
+    adata = merge_adata(args.adata_objects_fofn)
+    gen_qc_plots(adata)
+
+    # export concatenated data.
+    adata.write_h5ad(filename=args.adata_output, compression="gzip")
+    # save metadata
+    adata.obs.to_csv(args.output_metadata_file, index=True)
+
+    #######  validation metrics
+    val_metrics = get_validation_metrics(adata, "concatenation")
+    # log the validation metrics
+    val_metrics.to_csv(args.output_validation_file, index=True)
 
 
 if __name__ == "__main__":
@@ -84,16 +102,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    
-    adata = merge_adata(args.adata_objects_fofn)
-    gen_qc_plots(adata)
-
-    # export concatenated data.
-    adata.write_h5ad(filename=args.adata_output, compression="gzip")
-    # save metadata
-    adata.obs.to_csv(args.output_metadata_file, index=True) 
-
-    #######  validation metrics
-    val_metrics = get_validation_metrics(adata, "concatenation")
-    # log the validation metrics
-    val_metrics.to_csv(args.output_validation_file, index=True)
+    main(args)
