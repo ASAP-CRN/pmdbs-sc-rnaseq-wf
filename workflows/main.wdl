@@ -1,12 +1,13 @@
 version 1.0
 
-# Harmonized workflow entrypoint
+# Harmonized human PMDBS sc/sn RNAseq workflow entrypoint
 
-import "structs.wdl"
+import "../wf-common/wdl/structs.wdl"
+import "../wf-common/wdl/tasks/get_workflow_metadata.wdl" as GetWorkflowMetadata
 import "preprocess/preprocess.wdl" as Preprocess
 import "cohort_analysis/cohort_analysis.wdl" as CohortAnalysis
 
-workflow harmonized_pmdbs_analysis {
+workflow pmdbs_sc_rnaseq_analysis {
 	input {
 		String cohort_id
 		Array[Project] projects
@@ -21,12 +22,12 @@ workflow harmonized_pmdbs_analysis {
 		String cohort_raw_data_bucket
 		Array[String] cohort_staging_data_buckets
 
-		Int n_top_genes = 8000
+		Int n_top_genes = 3000
 		String scvi_latent_key = "X_scvi"
-		String batch_key = "batch_id"
+		String batch_key = "sample_id"
 		File cell_type_markers_list
 
-		Array[String] groups = ["sample", "batch", "cell_type"]
+		Array[String] groups = ["sample", "batch", "cell_type", "leiden_res_0.05", "leiden_res_0.10", "leiden_res_0.20", "leiden_res_0.40"]
 		Array[String] features = ["n_genes_by_counts", "total_counts", "pct_counts_mt", "pct_counts_rb", "doublet_score", "S_score", "G2M_score"]
 
 		String container_registry
@@ -34,21 +35,28 @@ workflow harmonized_pmdbs_analysis {
 	}
 
 	String workflow_execution_path = "workflow_execution"
+	String workflow_name = "pmdbs_sc_rnaseq"
+	String workflow_version = "v2.1.0"
+	String workflow_release = "https://github.com/ASAP-CRN/pmdbs-sc-rnaseq-wf/releases/tag/pmdbs_sc_rnaseq_analysis-~{workflow_version}"
 
-	call get_workflow_metadata {
+	call GetWorkflowMetadata.get_workflow_metadata {
 		input:
 			zones = zones
 	}
 
 	scatter (project in projects) {
-		String project_raw_data_path_prefix = "~{project.raw_data_bucket}/~{workflow_execution_path}"
+		String project_raw_data_path_prefix = "~{project.raw_data_bucket}/~{workflow_execution_path}/~{workflow_name}"
 
 		call Preprocess.preprocess {
 			input:
-				project_id = project.project_id,
+				team_id = project.team_id,
+				dataset_id = project.dataset_id,
 				samples = project.samples,
 				cellranger_reference_data = cellranger_reference_data,
 				cellbender_fpr = cellbender_fpr,
+				workflow_name = workflow_name,
+				workflow_version = workflow_version,
+				workflow_release = workflow_release,
 				run_timestamp = get_workflow_metadata.timestamp,
 				raw_data_path_prefix = project_raw_data_path_prefix,
 				billing_project = get_workflow_metadata.billing_project,
@@ -75,7 +83,7 @@ workflow harmonized_pmdbs_analysis {
 		if (project.run_project_cohort_analysis) {
 			call CohortAnalysis.cohort_analysis as project_cohort_analysis {
 				input:
-					cohort_id = project.project_id,
+					cohort_id = project.team_id,
 					project_sample_ids = preprocess.project_sample_ids,
 					preprocessed_adata_objects = preprocess.adata_object,
 					preprocessing_output_file_paths = preprocessing_output_file_paths,
@@ -85,6 +93,9 @@ workflow harmonized_pmdbs_analysis {
 					cell_type_markers_list = cell_type_markers_list,
 					groups = groups,
 					features = features,
+					workflow_name = workflow_name,
+					workflow_version = workflow_version,
+					workflow_release = workflow_release,
 					run_timestamp = get_workflow_metadata.timestamp,
 					raw_data_path_prefix = project_raw_data_path_prefix,
 					staging_data_buckets = project.staging_data_buckets,
@@ -110,6 +121,9 @@ workflow harmonized_pmdbs_analysis {
 				cell_type_markers_list = cell_type_markers_list,
 				groups = groups,
 				features = features,
+				workflow_name = workflow_name,
+				workflow_version = workflow_version,
+				workflow_release = workflow_release,
 				run_timestamp = get_workflow_metadata.timestamp,
 				raw_data_path_prefix = cohort_raw_data_path_prefix,
 				staging_data_buckets = cohort_staging_data_buckets,
@@ -158,11 +172,12 @@ workflow harmonized_pmdbs_analysis {
 		Array[File?] project_umap_cluster_adata_object = project_cohort_analysis.umap_cluster_adata_object
 		Array[File?] project_cell_annotated_adata_object = project_cohort_analysis.cell_annotated_adata_object
 		Array[File?] project_cell_types_csv = project_cohort_analysis.cell_types_csv
-		Array[File?] project_cell_annotated_metadata = project_cohort_analysis.cell_annotated_metadata
 
 		# PCA and Harmony integrated adata objects and artifact metrics
-		Array[File?] project_harmony_integrated_adata_object = project_cohort_analysis.harmony_integrated_adata_object
+		Array[File?] project_final_adata_object = project_cohort_analysis.final_adata_object
+		Array[File?] project_final_metadata_csv = project_cohort_analysis.final_metadata_csv
 		Array[File?] project_scib_report_results_csv = project_cohort_analysis.scib_report_results_csv
+		Array[File?] project_scib_report_results_svg = project_cohort_analysis.scib_report_results_svg
 
 		# Groups and features plots
 		Array[File?] project_groups_umap_plot_png = project_cohort_analysis.groups_umap_plot_png
@@ -188,11 +203,12 @@ workflow harmonized_pmdbs_analysis {
 		File? cohort_umap_cluster_adata_object = cross_team_cohort_analysis.umap_cluster_adata_object
 		File? cohort_cell_annotated_adata_object = cross_team_cohort_analysis.cell_annotated_adata_object
 		File? cohort_cell_types_csv = cross_team_cohort_analysis.cell_types_csv
-		File? cohort_cell_annotated_metadata = cross_team_cohort_analysis.cell_annotated_metadata
 
 		# PCA and Harmony integrated adata objects and artifact metrics
-		File? cohort_harmony_integrated_adata_object = cross_team_cohort_analysis.harmony_integrated_adata_object
+		File? cohort_final_adata_object = cross_team_cohort_analysis.final_adata_object
+		File? cohort_final_metadata_csv = cross_team_cohort_analysis.final_metadata_csv
 		File? cohort_scib_report_results_csv = cross_team_cohort_analysis.scib_report_results_csv
+		File? cohort_scib_report_results_svg = cross_team_cohort_analysis.scib_report_results_svg
 
 		# Groups and features plots
 		File? cohort_groups_umap_plot_png = cross_team_cohort_analysis.groups_umap_plot_png
@@ -202,7 +218,7 @@ workflow harmonized_pmdbs_analysis {
 	}
 
 	meta {
-		description: "Harmonized postmortem-derived brain sequencing (PMDBS) workflow"
+		description: "Harmonized human postmortem-derived brain sequencing (PMDBS) sc/sn RNA-seq workflow"
 	}
 
 	parameter_meta {
@@ -221,37 +237,5 @@ workflow harmonized_pmdbs_analysis {
 		features: {help: "Features to produce umap plots for. ['n_genes_by_counts', 'total_counts', 'pct_counts_mt', 'pct_counts_rb', 'doublet_score', 'S_score', 'G2M_score']"}
 		container_registry: {help: "Container registry where workflow Docker images are hosted."}
 		zones: {help: "Space-delimited set of GCP zones to spin up compute in."}
-	}
-}
-
-task get_workflow_metadata {
-	input {
-		String zones
-	}
-
-	command <<<
-		set -euo pipefail
-
-		# UTC timestamp for the running workflow
-		date -u +"%FT%H-%M-%SZ" > timestamp.txt
-
-		# Billing project to use for file requests (matches the billing project used for compute)
-		curl "http://metadata.google.internal/computeMetadata/v1/project/project-id" \
-				-H "Metadata-Flavor: Google" \
-		> billing_project.txt
-	>>>
-
-	output {
-		String timestamp = read_string("timestamp.txt")
-		String billing_project = read_string("billing_project.txt")
-	}
-
-	runtime {
-		docker: "gcr.io/google.com/cloudsdktool/google-cloud-cli:444.0.0-slim"
-		cpu: 2
-		memory: "4 GB"
-		disks: "local-disk 10 HDD"
-		preemptible: 3
-		zones: zones
 	}
 }

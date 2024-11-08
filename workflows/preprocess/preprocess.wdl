@@ -2,17 +2,21 @@ version 1.0
 
 # Generate a preprocessed AnnData object
 
-import "../structs.wdl"
+import "../../wf-common/wdl/structs.wdl"
 
 workflow preprocess {
 	input {
-		String project_id
+		String team_id
+		String dataset_id
 		Array[Sample] samples
 
 		File cellranger_reference_data
 
 		Float cellbender_fpr
 
+		String workflow_name
+		String workflow_version
+		String workflow_release
 		String run_timestamp
 		String raw_data_path_prefix
 		String billing_project
@@ -21,16 +25,17 @@ workflow preprocess {
 	}
 
 	# Task and subworkflow versions
-	String workflow_name = "preprocess"
+	String sub_workflow_name = "preprocess"
 	String cellranger_task_version = "1.1.0"
-	String workflow_version = "1.0.0"
+	String cellbender_task_version = "1.0.0"
+	String adata_task_version = "1.0.1"
 
-	Array[Array[String]] workflow_info = [[run_timestamp, workflow_name, workflow_version]]
+	Array[Array[String]] workflow_info = [[run_timestamp, workflow_name, workflow_version, workflow_release]]
 
-	String workflow_raw_data_path_prefix = "~{raw_data_path_prefix}/~{workflow_name}"
+	String workflow_raw_data_path_prefix = "~{raw_data_path_prefix}/~{sub_workflow_name}"
 	String cellranger_raw_data_path = "~{workflow_raw_data_path_prefix}/cellranger/~{cellranger_task_version}"
-	String cellbender_raw_data_path = "~{workflow_raw_data_path_prefix}/remove_technical_artifacts/~{workflow_version}"
-	String adata_raw_data_path = "~{workflow_raw_data_path_prefix}/counts_to_adata/~{workflow_version}"
+	String cellbender_raw_data_path = "~{workflow_raw_data_path_prefix}/remove_technical_artifacts/~{cellbender_task_version}"
+	String adata_raw_data_path = "~{workflow_raw_data_path_prefix}/counts_to_adata/~{adata_task_version}"
 
 	scatter (sample_object in samples) {
 		String cellranger_count_output = "~{cellranger_raw_data_path}/~{sample_object.sample_id}.raw_feature_bc_matrix.h5"
@@ -51,7 +56,7 @@ workflow preprocess {
 	scatter (index in range(length(samples))) {
 		Sample sample = samples[index]
 
-		Array[String] project_sample_id = [project_id, sample.sample_id]
+		Array[String] project_sample_id = [team_id, sample.sample_id]
 
 		String cellranger_count_complete = check_output_files_exist.sample_preprocessing_complete[index][0]
 		String cellbender_remove_background_complete = check_output_files_exist.sample_preprocessing_complete[index][1]
@@ -123,7 +128,8 @@ workflow preprocess {
 				input:
 					sample_id = sample.sample_id,
 					batch = select_first([sample.batch]),
-					project_id = project_id,
+					team_id = team_id,
+					dataset_id = dataset_id,
 					cellbender_counts = removed_background_counts_output,
 					raw_data_path = adata_raw_data_path,
 					workflow_info = workflow_info,
@@ -378,7 +384,9 @@ task counts_to_adata {
 	input {
 		String sample_id
 		String batch
-		String project_id
+
+		String team_id
+		String dataset_id
 
 		File cellbender_counts
 
@@ -394,11 +402,12 @@ task counts_to_adata {
 	command <<<
 		set -euo pipefail
 
-		python3 /opt/scripts/main/preprocess.py \
+		python3 /opt/scripts/main/prep_metadata.py \
 			--adata-input ~{cellbender_counts} \
 			--sample-id ~{sample_id} \
 			--batch ~{batch} \
-			--project ~{project_id} \
+			--team ~{team_id} \
+			--dataset ~{dataset_id} \
 			--adata-output ~{sample_id}.adata_object.h5ad
 
 		upload_outputs \
@@ -413,7 +422,7 @@ task counts_to_adata {
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_1"
+		docker: "~{container_registry}/scvi:1.1.0_2"
 		cpu: 2
 		memory: "16 GB"
 		disks: "local-disk ~{disk_size} HDD"

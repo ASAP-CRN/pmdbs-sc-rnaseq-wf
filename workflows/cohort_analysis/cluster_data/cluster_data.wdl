@@ -60,7 +60,6 @@ workflow cluster_data {
 		File umap_cluster_adata_object = cluster_cells.umap_cluster_adata_object
 		File cell_annotated_adata_object = annotate_cells.cell_annotated_adata_object
 		File cell_types_csv = annotate_cells.cell_types_csv #!FileCoercion
-		File cell_annotated_metadata = annotate_cells.cell_annotated_metadata #!FileCoercion
 	}
 }
 
@@ -91,7 +90,7 @@ task integrate_sample_data {
 			--latent-key ~{scvi_latent_key} \
 			--batch-key ~{batch_key} \
 			--adata-input ~{normalized_adata_object} \
-			--adata-output ~{cohort_id}.adata_object.scvi_integrated.h5ad \
+			--adata-output ~{cohort_id}.merged_adata_object.scvi_integrated.h5ad \
 			--output-scvi-dir ~{cohort_id}_scvi_model
 
 		# Model name cannot be changed because scvi models serialization expects a path containing a model.pt object
@@ -105,12 +104,12 @@ task integrate_sample_data {
 	>>>
 
 	output {
-		File integrated_adata_object = "~{cohort_id}.adata_object.scvi_integrated.h5ad"
+		File integrated_adata_object = "~{cohort_id}.merged_adata_object.scvi_integrated.h5ad"
 		String scvi_model_tar_gz = "~{raw_data_path}/~{cohort_id}_scvi_model.tar.gz"
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_1"
+		docker: "~{container_registry}/scvi:1.1.0_2"
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -152,7 +151,7 @@ task cluster_cells {
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_1"
+		docker: "~{container_registry}/scvi:1.1.0_2"
 		cpu: 16
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -192,25 +191,22 @@ task annotate_cells {
 			--marker-genes ~{cell_type_markers_list} \
 			--batch-key ~{batch_key} \
 			--output-cell-types-file ~{cohort_id}.cell_types.csv \
-			--adata-output ~{cluster_adata_object_basename}.annotate_cells.h5ad \
-			--output-metadata-file ~{cohort_id}.annotate_cells.metadata.csv
+			--adata-output ~{cluster_adata_object_basename}.annotate_cells.h5ad
 
 		upload_outputs \
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{cohort_id}.cell_types.csv" \
-			-o "~{cohort_id}.annotate_cells.metadata.csv"
+			-o "~{cohort_id}.cell_types.csv"
 	>>>
 
 	output {
 		File cell_annotated_adata_object = "~{cluster_adata_object_basename}.annotate_cells.h5ad"
 		String cell_types_csv = "~{raw_data_path}/~{cohort_id}.cell_types.csv"
-		String cell_annotated_metadata = "~{raw_data_path}/~{cohort_id}.annotate_cells.metadata.csv"
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_1"
+		docker: "~{container_registry}/scvi:1.1.0_2"
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"

@@ -7,7 +7,6 @@ from anndata import AnnData
 sys.path.append("/opt/scripts/utility")
 from helpers import score_cell_cycle, update_validation_metrics
 
-
 def process_adata(adata: AnnData, markers:pd.DataFrame, batch_key:str) -> AnnData:
     """
     do feature selection and add PCA
@@ -144,3 +143,4 @@ if __name__ == "__main__":
     output_metrics = update_validation_metrics(adata, "filter", val_metrics)
     # log the validation metrics
     output_metrics.to_csv(args.output_validation_file, index=True)
+

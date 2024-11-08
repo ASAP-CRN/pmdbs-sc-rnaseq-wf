@@ -5,8 +5,10 @@ from scib_metrics.benchmark import Benchmarker, BioConservation
 from scib_metrics.nearest_neighbors import NeighborsResults
 import faiss
 from pathlib import Path
+
 from anndata import AnnData
 from pandas import DataFrame
+
 
 # TODO: add these functions to utility/helpers.py
 def faiss_hnsw_nn(X: np.ndarray, k: int):
