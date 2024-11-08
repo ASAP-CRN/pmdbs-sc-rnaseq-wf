@@ -257,7 +257,7 @@ task merge_and_plot_qc_metrics {
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_1"
+		docker: "~{container_registry}/scvi:1.1.0_2"
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -332,7 +332,7 @@ task filter_and_normalize {
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_1"
+		docker: "~{container_registry}/scvi:1.1.0_2"
 		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -397,7 +397,7 @@ task integrate_harmony_and_artifact_metrics {
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_1"
+		docker: "~{container_registry}/scvi:1.1.0_2"
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -455,7 +455,7 @@ task plot_groups_and_features {
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_1"
+		docker: "~{container_registry}/scvi:1.1.0_2"
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
