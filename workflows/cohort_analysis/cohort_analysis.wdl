@@ -244,8 +244,8 @@ task merge_and_plot_qc_metrics {
 
 	output {
 		File merged_adata_object = "~{cohort_id}.merged_adata_object.h5ad"
+		File qc_initial_metadata = "~{cohort_id}.initial_metadata.csv"
 		File qc_validation_metrics = "~{cohort_id}.validation_metrics.csv"
-		File initial_metadata = "~{cohort_id}.initial_metadata.csv"
 
 		Array[String] qc_plots_png = [
 			"~{raw_data_path}/~{cohort_id}.n_genes_by_counts.violin.png",
