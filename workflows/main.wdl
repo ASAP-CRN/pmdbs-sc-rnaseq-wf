@@ -49,7 +49,8 @@ workflow pmdbs_sc_rnaseq_analysis {
 
 		call Preprocess.preprocess {
 			input:
-				project_id = project.project_id,
+				team_id = project.team_id,
+				dataset_id = project.dataset_id,
 				samples = project.samples,
 				cellranger_reference_data = cellranger_reference_data,
 				cellbender_fpr = cellbender_fpr,
@@ -82,7 +83,7 @@ workflow pmdbs_sc_rnaseq_analysis {
 		if (project.run_project_cohort_analysis) {
 			call CohortAnalysis.cohort_analysis as project_cohort_analysis {
 				input:
-					cohort_id = project.project_id,
+					cohort_id = project.team_id,
 					project_sample_ids = preprocess.project_sample_ids,
 					preprocessed_adata_objects = preprocess.adata_object,
 					preprocessing_output_file_paths = preprocessing_output_file_paths,

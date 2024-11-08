@@ -19,8 +19,8 @@ parser.add_argument(
     help="Batch from which the sample/dataset originated",
 )
 # "project" is ambiguous... change to dataset... add tea,
-parser.add_argument("--dataset", dest="dataset", type=str, help="Dataset ID")
 parser.add_argument("--team", dest="team", type=str, help="Team ID")
+parser.add_argument("--dataset", dest="dataset", type=str, help="Dataset ID")
 parser.add_argument(
     "--adata-output",
     dest="adata_output",
