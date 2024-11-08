@@ -110,7 +110,7 @@ workflow cohort_analysis {
 	call plot_groups_and_features {
 		input:
 			cohort_id = cohort_id,
-			harmony_integrated_adata_object = integrate_harmony_and_artifact_metrics.harmony_integrated_adata_object, #!FileCoercion
+			final_adata_object = integrate_harmony_and_artifact_metrics.final_adata_object, #!FileCoercion
 			groups = groups,
 			features = features,
 			raw_data_path = raw_data_path,
@@ -143,7 +143,8 @@ workflow cohort_analysis {
 			cluster_data.cell_types_csv
 		],
 		[
-			integrate_harmony_and_artifact_metrics.harmony_integrated_adata_object,
+			integrate_harmony_and_artifact_metrics.final_adata_object,
+			integrate_harmony_and_artifact_metrics.final_metadata_csv,
 			integrate_harmony_and_artifact_metrics.scib_report_results_csv,
 			integrate_harmony_and_artifact_metrics.scib_report_results_svg
 		],
@@ -180,7 +181,8 @@ workflow cohort_analysis {
 		File cell_types_csv = cluster_data.cell_types_csv
 
 		# PCA and Harmony integrated adata objects and artifact metrics
-		File harmony_integrated_adata_object = integrate_harmony_and_artifact_metrics.harmony_integrated_adata_object #!FileCoercion
+		File final_adata_object = integrate_harmony_and_artifact_metrics.final_adata_object #!FileCoercion
+		File final_metadata_csv = integrate_harmony_and_artifact_metrics.final_metadata_csv #!FileCoercion
 		File scib_report_results_csv = integrate_harmony_and_artifact_metrics.scib_report_results_csv #!FileCoercion
 		File scib_report_results_svg = integrate_harmony_and_artifact_metrics.scib_report_results_svg #!FileCoercion
 
@@ -355,7 +357,6 @@ task integrate_harmony_and_artifact_metrics {
 		String zones
 	}
 
-	String cell_annotated_adata_object_basename = basename(cell_annotated_adata_object, ".h5ad")
 	Int mem_gb = ceil(size(cell_annotated_adata_object, "GB") * 5 + 20)
 	Int disk_size = ceil(size(cell_annotated_adata_object, "GB") * 4 + 20)
 
@@ -388,9 +389,9 @@ task integrate_harmony_and_artifact_metrics {
 	>>>
 
 	output {
-		String harmony_integrated_adata_object = "~{raw_data_path}/~{cohort_id}.final_adata.h5ad"
-		String final_metadata_csv = "~{raw_data_path}/~{cohort_id}.scib_report.csv"
-		String scib_report_results_csv = "~{raw_data_path}/~{cohort_id}.final_metadata.csv"
+		String final_adata_object = "~{raw_data_path}/~{cohort_id}.final_adata.h5ad"
+		String final_metadata_csv = "~{raw_data_path}/~{cohort_id}.final_metadata.csv"
+		String scib_report_results_csv = "~{raw_data_path}/~{cohort_id}.scib_report.csv"
 		String scib_report_results_svg = "~{raw_data_path}/~{cohort_id}.scib_results.svg"
 	}
 
@@ -411,7 +412,7 @@ task integrate_harmony_and_artifact_metrics {
 task plot_groups_and_features {
 	input {
 		String cohort_id
-		File harmony_integrated_adata_object
+		File final_adata_object
 
 		Array[String] groups
 		Array[String] features
@@ -423,14 +424,14 @@ task plot_groups_and_features {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(harmony_integrated_adata_object, "GB") * 5 + 20)
-	Int disk_size = ceil(size(harmony_integrated_adata_object, "GB") * 4 + 20)
+	Int mem_gb = ceil(size(final_adata_object, "GB") * 5 + 20)
+	Int disk_size = ceil(size(final_adata_object, "GB") * 4 + 20)
 
 	command <<<
 		set -euo pipefail
 
 		python3 /opt/scripts/main/plot_feats_and_groups.py \
-			--adata-input ~{harmony_integrated_adata_object} \
+			--adata-input ~{final_adata_object} \
 			--group ~{sep=',' groups} \
 			--output-group-umap-plot-prefix "~{cohort_id}" \
 			--feature ~{sep=',' features} \

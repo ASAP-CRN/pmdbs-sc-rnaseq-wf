@@ -166,7 +166,8 @@ asap-dev-data-{cohort,team-xxyy}
 │   ├── ${cohort_id}.total_counts.violin.png
 │   ├── ${cohort_id}.final_validation_metrics.csv
 │   ├── ${cohort_id}.cell_types.csv
-│   ├── ${cohort_id}.merged_adata_object.scvi_integrated.umap_cluster.annotate_cells.harmony_integrated.h5ad
+│   ├── ${cohort_id}.final_adata.h5ad
+│   ├── ${cohort_id}.final_metadata.csv
 │   ├── ${cohort_id}.scib_report.csv
 │   ├── ${cohort_id}.scib_results.svg
 │   ├── ${cohort_id}.features.umap.png

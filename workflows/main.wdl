@@ -174,7 +174,8 @@ workflow pmdbs_sc_rnaseq_analysis {
 		Array[File?] project_cell_types_csv = project_cohort_analysis.cell_types_csv
 
 		# PCA and Harmony integrated adata objects and artifact metrics
-		Array[File?] project_harmony_integrated_adata_object = project_cohort_analysis.harmony_integrated_adata_object
+		Array[File?] project_final_adata_object = project_cohort_analysis.final_adata_object
+		Array[File?] project_final_metadata_csv = project_cohort_analysis.final_metadata_csv
 		Array[File?] project_scib_report_results_csv = project_cohort_analysis.scib_report_results_csv
 		Array[File?] project_scib_report_results_svg = project_cohort_analysis.scib_report_results_svg
 
@@ -204,7 +205,8 @@ workflow pmdbs_sc_rnaseq_analysis {
 		File? cohort_cell_types_csv = cross_team_cohort_analysis.cell_types_csv
 
 		# PCA and Harmony integrated adata objects and artifact metrics
-		File? cohort_harmony_integrated_adata_object = cross_team_cohort_analysis.harmony_integrated_adata_object
+		File? cohort_final_adata_object = cross_team_cohort_analysis.final_adata_object
+		File? cohort_final_metadata_csv = cross_team_cohort_analysis.final_metadata_csv
 		File? cohort_scib_report_results_csv = cross_team_cohort_analysis.scib_report_results_csv
 		File? cohort_scib_report_results_svg = cross_team_cohort_analysis.scib_report_results_svg
 
