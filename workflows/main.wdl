@@ -24,10 +24,10 @@ workflow pmdbs_sc_rnaseq_analysis {
 
 		Int n_top_genes = 3000
 		String scvi_latent_key = "X_scvi"
-		String batch_key = "batch_id"
+		String batch_key = "sample_id"
 		File cell_type_markers_list
 
-		Array[String] groups = ["sample", "batch", "cell_type"]
+		Array[String] groups = ["sample", "batch", "cell_type", "leiden_res_0.05", "leiden_res_0.10", "leiden_res_0.20", "leiden_res_0.40"]
 		Array[String] features = ["n_genes_by_counts", "total_counts", "pct_counts_mt", "pct_counts_rb", "doublet_score", "S_score", "G2M_score"]
 
 		String container_registry

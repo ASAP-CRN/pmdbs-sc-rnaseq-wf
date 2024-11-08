@@ -219,9 +219,10 @@ task merge_and_plot_qc_metrics {
 			echo -e "${sample}\t${adata_path}" >> adata_samples_paths.tsv
 		done < ~{write_lines(preprocessed_adata_objects)}
 
-		python3 /opt/scripts/main/plot_qc_metrics.py \
+		python3 /opt/scripts/main/merge_and_plot_qc.py \
 			--adata-objects-fofn adata_samples_paths.tsv \
 			--adata-output ~{cohort_id}.merged_adata_object.h5ad \
+			--output-metadata-file ~{cohort_id}.initial_metadata.csv \
 			--output-validation-file ~{cohort_id}.validation_metrics.csv
 
 		mv "plots/violin_n_genes_by_counts.png" "plots/~{cohort_id}.n_genes_by_counts.violin.png"
@@ -244,6 +245,7 @@ task merge_and_plot_qc_metrics {
 	output {
 		File merged_adata_object = "~{cohort_id}.merged_adata_object.h5ad"
 		File qc_validation_metrics = "~{cohort_id}.validation_metrics.csv"
+		File initial_metadata = "~{cohort_id}.initial_metadata.csv"
 
 		Array[String] qc_plots_png = [
 			"~{raw_data_path}/~{cohort_id}.n_genes_by_counts.violin.png",
@@ -365,12 +367,13 @@ task integrate_harmony_and_artifact_metrics {
 		python3 /opt/scripts/main/add_harmony.py \
 			--batch-key ~{batch_key} \
 			--adata-input ~{cell_annotated_adata_object} \
-			--adata-output ~{cell_annotated_adata_object_basename}.harmony_integrated.h5ad
+			--adata-output ~{cohort_id}.final_adata.h5ad \
+			--output-metadata-file ~{cohort_id}.final_metadata.csv
 
 		python3 /opt/scripts/main/artifact_metrics.py \
 			--latent-key ~{scvi_latent_key} \
 			--batch-key ~{batch_key} \
-			--adata-input ~{cell_annotated_adata_object_basename}.harmony_integrated.h5ad \
+			--adata-input ~{cohort_id}.final.h5ad \
 			--output-report-dir scib_report_dir
 
 		mv "scib_report_dir/scib_report.csv" "scib_report_dir/~{cohort_id}.scib_report.csv"
@@ -380,14 +383,16 @@ task integrate_harmony_and_artifact_metrics {
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{cell_annotated_adata_object_basename}.harmony_integrated.h5ad" \
+			-o "~{cohort_id}.final_adata.h5ad" \
+			-o "~{cohort_id}.final_metadata.csv" \
 			-o "scib_report_dir/~{cohort_id}.scib_report.csv" \
 			-o "scib_report_dir/~{cohort_id}.scib_results.svg"
 	>>>
 
 	output {
-		String harmony_integrated_adata_object = "~{raw_data_path}/~{cell_annotated_adata_object_basename}.harmony_integrated.h5ad"
-		String scib_report_results_csv = "~{raw_data_path}/~{cohort_id}.scib_report.csv"
+		String harmony_integrated_adata_object = "~{raw_data_path}/~{cohort_id}.final_adata.h5ad"
+		String final_metadata_csv = "~{raw_data_path}/~{cohort_id}.scib_report.csv"
+		String scib_report_results_csv = "~{raw_data_path}/~{cohort_id}.final_metadata.csv"
 		String scib_report_results_svg = "~{raw_data_path}/~{cohort_id}.scib_results.svg"
 	}
 
