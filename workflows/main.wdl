@@ -172,7 +172,6 @@ workflow pmdbs_sc_rnaseq_analysis {
 		Array[File?] project_umap_cluster_adata_object = project_cohort_analysis.umap_cluster_adata_object
 		Array[File?] project_cell_annotated_adata_object = project_cohort_analysis.cell_annotated_adata_object
 		Array[File?] project_cell_types_csv = project_cohort_analysis.cell_types_csv
-		Array[File?] project_cell_annotated_metadata = project_cohort_analysis.cell_annotated_metadata
 
 		# PCA and Harmony integrated adata objects and artifact metrics
 		Array[File?] project_harmony_integrated_adata_object = project_cohort_analysis.harmony_integrated_adata_object
@@ -203,7 +202,6 @@ workflow pmdbs_sc_rnaseq_analysis {
 		File? cohort_umap_cluster_adata_object = cross_team_cohort_analysis.umap_cluster_adata_object
 		File? cohort_cell_annotated_adata_object = cross_team_cohort_analysis.cell_annotated_adata_object
 		File? cohort_cell_types_csv = cross_team_cohort_analysis.cell_types_csv
-		File? cohort_cell_annotated_metadata = cross_team_cohort_analysis.cell_annotated_metadata
 
 		# PCA and Harmony integrated adata objects and artifact metrics
 		File? cohort_harmony_integrated_adata_object = cross_team_cohort_analysis.harmony_integrated_adata_object

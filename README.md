@@ -67,7 +67,8 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 | Type | Name | Description |
 | :- | :- | :- |
-| String | project_id | Unique identifier for project; used for naming output files |
+| String | team_id | Unique identifier for team; used for naming output files |
+| String | dataset_id | Unique identifier for dataset; used for metadata |
 | Array[[Sample](#sample)] | samples | The set of samples associated with this project |
 | File? | project_sample_metadata_csv | CSV containing all sample information including batch, condition, etc. |
 | Boolean | run_project_cohort_analysis | Whether or not to run cohort analysis within the project |
@@ -89,8 +90,9 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 The inputs JSON may be generated manually, however when running a large number of samples, this can become unwieldly. The `generate_inputs` utility script may be used to automatically generate the inputs JSON. The script requires the libraries outlined in [the requirements.txt file](wf-common/util/requirements.txt) and the following inputs:
 
-- `project-tsv`: One or more project TSVs with one row per sample and columns project_id, sample_id, batch, fastq_path. All samples from all projects may be included in the same project TSV, or multiple project TSVs may be provided.
-    - `project_id`: A unique identifier for the project from which the sample(s) arose
+- `project-tsv`: One or more project TSVs with one row per sample and columns team_id, sample_id, batch, fastq_path. All samples from all projects may be included in the same project TSV, or multiple project TSVs may be provided.
+    - `team_id`: A unique identifier for the team from which the sample(s) arose
+    - `dataset_id`: A unique identifier for the dataset from which the sample(s) arose
     - `sample_id`: A unique identifier for the sample within the project
     - `batch`: The sample's batch
     - `fastq_path`: The directory in which paired sample FASTQs may be found, including the gs:// bucket name and path
@@ -117,7 +119,7 @@ Example usage:
 
 ## Output structure
 
-- `cohort_id`: either the `project_id` for project-level cohort analysis, or the `cohort_id` for the full cohort
+- `cohort_id`: either the `team_id` for project-level cohort analysis, or the `cohort_id` for the full cohort
 - `workflow_run_timestamp`: format: `%Y-%m-%dT%H-%M-%SZ`
 - The list of samples used to generate the cohort analysis will be output alongside other cohort analysis outputs in the staging data bucket (`${cohort_id}.sample_list.tsv`)
 - The MANIFEST.tsv file in the staging data bucket describes the file name, md5 hash, timestamp, workflow version, workflow name, and workflow release for the run used to generate each file in that directory
@@ -164,7 +166,6 @@ asap-dev-data-{cohort,team-xxyy}
 │   ├── ${cohort_id}.total_counts.violin.png
 │   ├── ${cohort_id}.final_validation_metrics.csv
 │   ├── ${cohort_id}.cell_types.csv
-│   ├── ${cohort_id}.annotate_cells.metadata.csv
 │   ├── ${cohort_id}.merged_adata_object.scvi_integrated.umap_cluster.annotate_cells.harmony_integrated.h5ad
 │   ├── ${cohort_id}.scib_report.csv
 │   ├── ${cohort_id}.scib_results.svg

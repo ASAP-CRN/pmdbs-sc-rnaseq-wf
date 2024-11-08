@@ -140,8 +140,7 @@ workflow cohort_analysis {
 			filter_and_normalize.final_validation_metrics
 		]),
 		[
-			cluster_data.cell_types_csv,
-			cluster_data.cell_annotated_metadata
+			cluster_data.cell_types_csv
 		],
 		[
 			integrate_harmony_and_artifact_metrics.harmony_integrated_adata_object,
@@ -179,7 +178,6 @@ workflow cohort_analysis {
 		File umap_cluster_adata_object = cluster_data.umap_cluster_adata_object
 		File cell_annotated_adata_object = cluster_data.cell_annotated_adata_object
 		File cell_types_csv = cluster_data.cell_types_csv
-		File cell_annotated_metadata = cluster_data.cell_annotated_metadata
 
 		# PCA and Harmony integrated adata objects and artifact metrics
 		File harmony_integrated_adata_object = integrate_harmony_and_artifact_metrics.harmony_integrated_adata_object #!FileCoercion
