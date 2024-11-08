@@ -233,7 +233,7 @@ workflow pmdbs_sc_rnaseq_analysis {
 		scvi_latent_key: {help: "Latent key to save the scVI latent to. ['X_scvi']"}
 		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
 		cell_type_markers_list: {help: "CSV file containing a list of major cell type markers; used to annotate clusters."}
-		groups: {help: "Groups to produce umap plots for. ['sample', 'batch', 'cell_type']"}
+		groups: {help: "Groups to produce umap plots for. ['sample', 'batch', 'cell_type', 'leiden_res_0.05', 'leiden_res_0.10', 'leiden_res_0.20', 'leiden_res_0.40']"}
 		features: {help: "Features to produce umap plots for. ['n_genes_by_counts', 'total_counts', 'pct_counts_mt', 'pct_counts_rb', 'doublet_score', 'S_score', 'G2M_score']"}
 		container_registry: {help: "Container registry where workflow Docker images are hosted."}
 		zones: {help: "Space-delimited set of GCP zones to spin up compute in."}
