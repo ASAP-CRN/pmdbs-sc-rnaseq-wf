@@ -2,7 +2,8 @@ import argparse
 import scanpy as sc
 from anndata import AnnData
 
-def add_harmony(adata: AnnData, n_comps:int=30):
+
+def add_harmony(adata: AnnData, n_comps: int = 30):
     """
     adds PCA and Harmony integration to AnnData object in place
     """
@@ -15,7 +16,30 @@ def add_harmony(adata: AnnData, n_comps:int=30):
 
     # add harmony
     if "X_pca_harmony" not in adata.obsm:
+        # print("Running Harmony integration")
         sc.external.pp.harmony_integrate(adata, args.batch_key)
+
+
+def main(args: argparse.Namespace):
+    """
+    basic logic with args as input
+
+    """
+    # Fixed parameters
+    n_comps = 30
+
+    adata = sc.read_h5ad(args.adata_input)  # type: ignore
+    # operations done in place
+    add_harmony(adata, n_comps=n_comps)
+
+    # 9. write_h5ad
+    adata.write_h5ad(filename=args.adata_output, compression="gzip")
+
+    # save metadata
+    metatable = adata.obs
+    metatable["UMAP_1"] = adata.obsm["X_umap"][:, 0]
+    metatable["UMAP_2"] = adata.obsm["X_umap"][:, 1]
+    metatable.to_csv(args.output_metadata_file, index=True)
 
 
 if __name__ == "__main__":
@@ -27,7 +51,10 @@ if __name__ == "__main__":
         help="Key in AnnData object for batch information",
     )
     parser.add_argument(
-        "--adata-input", dest="adata_input", type=str, help="AnnData object for a dataset"
+        "--adata-input",
+        dest="adata_input",
+        type=str,
+        help="AnnData object for a dataset",
     )
     parser.add_argument(
         "--adata-output",
@@ -42,18 +69,4 @@ if __name__ == "__main__":
         help="Output file to write metadata to",
     )
     args = parser.parse_args()
-
-    # Fixed parameters
-    n_comps = 30
-
-    adata = sc.read_h5ad(args.adata_input)  # type: ignore
-    add_harmony(adata, n_comps=n_comps)
-
-    # 9. write_h5ad
-    adata.write_h5ad(filename=args.adata_output, compression="gzip")
-
-    # save metadata
-    metatable = adata.obs 
-    metatable['UMAP_1'] = adata.obsm['X_umap'][:,0]
-    metatable['UMAP_2'] = adata.obsm['X_umap'][:,1]
-    metatable.to_csv(args.output_metadata_file, index=True) 
+    main(args)

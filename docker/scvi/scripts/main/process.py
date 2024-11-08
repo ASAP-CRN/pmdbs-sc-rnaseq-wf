@@ -7,16 +7,18 @@ from anndata import AnnData
 sys.path.append("/opt/scripts/utility")
 from helpers import score_cell_cycle, update_validation_metrics
 
-def process_adata(adata: AnnData, markers:pd.DataFrame, batch_key:str) -> AnnData:
+
+def process_adata(
+    adata: AnnData, markers: pd.DataFrame, batch_key: str
+) -> tuple[AnnData, pd.DataFrame, pd.DataFrame]:
     """
     do feature selection and add PCA
     """
-    
+
     ### fixed parameters (TODO: make an argument)
     n_components = 30
     target_sum = 1e4
     n_top_genes_all = 20_000
-
 
     # does this work with sparse uint8?
     adata.layers["counts"] = adata.X.copy()  # type: ignore
@@ -38,17 +40,6 @@ def process_adata(adata: AnnData, markers:pd.DataFrame, batch_key:str) -> AnnDat
         print("WARNING: using 'batch_id' instead of 'sample' for now")
         batch_key = "batch_id"
 
-    # prefer pearson_residuals to seurat_v3
-    # hvgs_full = scanpy.pp.highly_variable_genes(
-    #     adata,
-    #     n_top_genes=n_top_genes_all,
-    #     batch_key=batch_key,
-    #     flavor="seurat_v3",
-    #     check_values=True,
-    #     layer="counts",
-    #     subset=False,
-    #     inplace=False,
-    # )
     hvgs_full = sc.experimental.pp.highly_variable_genes(
         adata,
         n_top_genes=n_top_genes_all,
@@ -61,7 +52,9 @@ def process_adata(adata: AnnData, markers:pd.DataFrame, batch_key:str) -> AnnDat
     )
 
     # hack to make sure we keep the marker genes
-    hvgs_full.loc[markers.index, "highly_variable_nbatches"] = hvgs_full["highly_variable_nbatches"].max() + 1.0
+    hvgs_full.loc[markers.index, "highly_variable_nbatches"] = (
+        hvgs_full["highly_variable_nbatches"].max() + 1.0
+    )
     # Sort genes by how often they selected as hvg within each batch and
     # break ties with median rank of residual variance across batches
     hvgs_full.sort_values(
@@ -70,6 +63,9 @@ def process_adata(adata: AnnData, markers:pd.DataFrame, batch_key:str) -> AnnDat
         na_position="last",
         inplace=True,
     )
+
+    full_features = adata.var.copy()
+
     hvgs_full = hvgs_full.iloc[: args.n_top_genes].index.to_list()
     adata = adata[:, adata.var.index.isin(hvgs_full)]
 
@@ -78,11 +74,53 @@ def process_adata(adata: AnnData, markers:pd.DataFrame, batch_key:str) -> AnnDat
     ## consider this alternate pca and avoid the normalization log1p?
     # scanpy.experimental.pp.normalize_pearson_residuals_pca(adata, *, theta=100, clip=None, n_comps=50, random_state=0, kwargs_pca=mappingproxy({}), mask_var=_empty, use_highly_variable=None, check_values=True, inplace=True)
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Normalize seurat objects")
+    hvg_features = adata.var.copy()
+    return (adata, full_features, hvg_features)
 
+
+def main(args: argparse.Namespace):
+    """
+    basic logic with args as input
+
+    """
+
+    # Set CPUs to use for parallel computing
+    sc._settings.ScanpyConfig.n_jobs = -1
+
+    # 0. load data
+    adata = sc.read_h5ad(args.adata_input)  # type: ignore
+    # 1. load marker_genes
+    # alternative way to get markers:
+    # https://github.com/NIH-CARD/brain-taxonomy/blob/main/markers/cellassign_card_markers.csv
+    markers = pd.read_csv(args.marker_genes, index_col=0)
+
+    # 2. process data
+    adata, full_features, hvg_features = process_adata(adata, markers, args.batch_key)
+
+    # 3. save the filtered adata
+    # save the filtered adata
+    adata.write_h5ad(filename=args.adata_output, compression="gzip")
+
+    full_features.to_csv(args.full_gene_file, index=True)
+    hvg_features.to_csv(args.hvg_file, index=True)
+
+    # 4. update the validation metrics
+    #######  validation metrics
+    val_metrics = pd.read_csv(args.output_validation_file, index_col=0)
+    output_metrics = update_validation_metrics(adata, "filter", val_metrics)
+    # log the validation metrics
+    output_metrics.to_csv(args.output_validation_file, index=True)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="normalize and identify features (hvg)"
+    )
     parser.add_argument(
-        "--adata-input", dest="adata_input", type=str, help="AnnData object for a dataset"
+        "--adata-input",
+        dest="adata_input",
+        type=str,
+        help="AnnData object for a dataset",
     )
     parser.add_argument(
         "--batch-key",
@@ -107,9 +145,24 @@ if __name__ == "__main__":
         "--marker-genes",
         dest="marker_genes",
         type=str,
-        default="resources/celltype_marker_table.csv", # this doesn't seem accurate
+        default="resources/cellassign_card_markers.csv",  # this doesn't seem accurate
         help="Path to marker_genes .csv file",
     )
+    parser.add_argument(
+        "--output-all-genes",
+        dest="full_gene_file",
+        type=str,
+        default="./all_genes.csv",  # this doesn't seem accurate
+        help="Output file to save feature metadata (full genes)",
+    )
+    parser.add_argument(
+        "--output-hvg-genes",
+        dest="hvg_file",
+        type=str,
+        default="./hvg_genes.csv",  # this doesn't seem accurate
+        help="Output file to save hvg metadata (full genes)",
+    )
+
     parser.add_argument(
         "--output-validation-file",
         dest="output_validation_file",
@@ -117,30 +170,5 @@ if __name__ == "__main__":
         help="Output file to write validation metrics to",
     )
 
-
     args = parser.parse_args()
-
-    # Set CPUs to use for parallel computing
-    sc._settings.ScanpyConfig.n_jobs = -1
-
-    # 0. load data
-    adata = sc.read_h5ad(args.adata_input)  # type: ignore
-    # 1. load marker_genes
-    # alternative way to get markers:
-    # https://github.com/NIH-CARD/brain-taxonomy/blob/main/markers/cellassign_card_markers.csv
-    markers = pd.read_csv(args.marker_genes, index_col=0)
-
-    # 2. process data
-    adata = process_adata(adata, markers, args.batch_key)
-    
-    # 3. save the filtered adata
-    # save the filtered adata
-    adata.write_h5ad(filename=args.adata_output, compression="gzip")
-
-    # 4. update the validation metrics
-    #######  validation metrics
-    val_metrics = pd.read_csv(args.output_validation_file, index_col=0)
-    output_metrics = update_validation_metrics(adata, "filter", val_metrics)
-    # log the validation metrics
-    output_metrics.to_csv(args.output_validation_file, index=True)
-
+    main(args)

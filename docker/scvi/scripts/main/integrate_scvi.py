@@ -3,12 +3,14 @@ import argparse
 import scvi
 import anndata as ad
 
-def integrate_with_scvi(adata: ad.AnnData, batch_key: str, latent_key: str) -> tuple[ad.AnnData, scvi.model.SCVI]:
+
+def integrate_with_scvi(
+    adata: ad.AnnData, batch_key: str, latent_key: str
+) -> tuple[ad.AnnData, scvi.model.SCVI]:
     """
     fit scvi model to AnnData object
     """
-    
-    
+
     ## fixed parameters
     n_latent = 30
     n_layers = 1
@@ -25,7 +27,6 @@ def integrate_with_scvi(adata: ad.AnnData, batch_key: str, latent_key: str) -> t
     # plan_kwargs = {"lr_factor": 0.1, "lr_patience": 20, "reduce_lr_on_plateau": True}
     # early_stopping_patience = 25
 
-  
     # integrate the data with `scVI`
     noise = ["doublet_score", "pct_counts_mt", "pct_counts_rb"]
     categorical_covariate_keys = None
@@ -54,8 +55,22 @@ def integrate_with_scvi(adata: ad.AnnData, batch_key: str, latent_key: str) -> t
     )
 
     adata.obsm[latent_key] = model.get_latent_representation()  # type: ignore
-                        
-    return adata, model
+
+    return (adata, model)
+
+
+def main(args: argparse.Namespace):
+    """
+    basic logic with args as input
+
+    """
+    # 0. load data
+    adata = ad.read_h5ad(args.adata_input)  # type: ignore
+    # 2. process data
+    adata, model = integrate_with_scvi(adata, args.batch_key, args.latent_key)
+    # 3. save the integrated adata and scvi model
+    model.save(args.output_scvi_dir, overwrite=True)
+    adata.write_h5ad(filename=args.adata_output, compression="gzip")
 
 
 if __name__ == "__main__":
@@ -74,7 +89,10 @@ if __name__ == "__main__":
         help="Key in AnnData object for batch information",
     )
     parser.add_argument(
-        "--adata-input", dest="adata_input", type=str, help="AnnData object for a dataset"
+        "--adata-input",
+        dest="adata_input",
+        type=str,
+        help="AnnData object for a dataset",
     )
     parser.add_argument(
         "--adata-output",
@@ -91,14 +109,4 @@ if __name__ == "__main__":
 
     # TODO: optional scvi arguments
     args = parser.parse_args()
-
-    # 0. load data
-    adata = ad.read_h5ad(args.adata_input)  # type: ignore
-
-    # 2. process data
-    adata,model = integrate_with_scvi(adata, args.batch_key, args.latent_key)
-    
-
-    # 3. save the integrated adata and scvi model
-    model.save(args.output_scvi_dir, overwrite=True)
-    adata.write_h5ad(filename=args.adata_output, compression="gzip")
+    main(args)

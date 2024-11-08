@@ -43,7 +43,10 @@ def faiss_brute_force_nn(X: np.ndarray, k: int):
     # distances are squared
     return NeighborsResults(indices=indices, distances=np.sqrt(distances))
 
-def get_artifact_metrics(adata:AnnData, batch_key: str, label_key: str,scib_report_dir: Path | str) -> tuple[AnnData, DataFrame]:
+
+def get_artifact_metrics(
+    adata: AnnData, batch_key: str, label_key: str, scib_report_dir: Path | str
+) -> DataFrame:
     # Fixed parameters
     n_comps = 30
 
@@ -71,18 +74,34 @@ def get_artifact_metrics(adata:AnnData, batch_key: str, label_key: str,scib_repo
     bm.prepare(neighbor_computer=faiss_brute_force_nn)
     bm.benchmark()
 
-    bm.plot_results_table(min_max_scale=False, save_dir=report_dir)
+    bm.plot_results_table(min_max_scale=False, save_dir=scib_report_dir)
     df = bm.get_results(min_max_scale=False)
 
+    return df
 
-    return adata, df
+
+def main(args: argparse.Namespace):
+    """
+    basic logic with args as input
+
+    """
+    adata = sc.read_h5ad(args.adata_input)  # type: ignore
+
+    # save the results
+    report_dir = Path.cwd() / args.scib_report_dir
+    if not report_dir.exists():
+        report_dir.mkdir(parents=True, exist_ok=True)
+
+    report_df = get_artifact_metrics(adata, args.batch_key, args.label_key, report_dir)
+    report_df.to_csv((report_dir / "scib_report.csv"), index=True)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Compute `scib` metrics on final artefacts"
     )
-    parser.add_argument("--label-key",
+    parser.add_argument(
+        "--label-key",
         dest="label_key",
         type=str,
         default="cell_type",
@@ -95,7 +114,10 @@ if __name__ == "__main__":
         help="Key in AnnData object for batch information",
     )
     parser.add_argument(
-        "--adata-input", dest="adata_input", type=str, help="AnnData object for a dataset"
+        "--adata-input",
+        dest="adata_input",
+        type=str,
+        help="AnnData object for a dataset",
     )
     parser.add_argument(
         "--output-report-dir",
@@ -105,14 +127,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
-    adata = sc.read_h5ad(args.adata_input)  # type: ignore
-
-    # save the results
-    report_dir = Path.cwd() / args.scib_report_dir
-    if not report_dir.exists():
-        report_dir.mkdir(parents=True, exist_ok=True)
-
-    adata, report_df = get_artifact_metrics(adata, args.batch_key, args.label_key, report_dir)
-    report_df.to_csv((report_dir / "scib_report.csv"), index=True)
-
+    main(args)
