@@ -164,6 +164,7 @@ workflow pmdbs_sc_rnaseq_analysis {
 
 		# Merged adata objects, filtered and normalized adata objects, QC plots
 		Array[File?] project_merged_adata_object = project_cohort_analysis.merged_adata_object
+		Array[File?] project_qc_initial_metadata_csv = project_cohort_analysis.qc_initial_metadata_csv
 		Array[Array[File]?] project_qc_plots_png = project_cohort_analysis.qc_plots_png
 		Array[File?] project_filtered_adata_object = project_cohort_analysis.filtered_adata_object
 		Array[File?] project_normalized_adata_object = project_cohort_analysis.normalized_adata_object
@@ -197,6 +198,7 @@ workflow pmdbs_sc_rnaseq_analysis {
 
 		# Merged adata objects, filtered and normalized adata objects, QC plots
 		File? cohort_merged_adata_object = cross_team_cohort_analysis.merged_adata_object
+		File? cohort_qc_initial_metadata_csv = cross_team_cohort_analysis.qc_initial_metadata_csv
 		Array[File]? cohort_qc_plots_png = cross_team_cohort_analysis.qc_plots_png
 		File? cohort_filtered_adata_object = cross_team_cohort_analysis.filtered_adata_object
 		File? cohort_normalized_adata_object = cross_team_cohort_analysis.normalized_adata_object

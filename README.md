@@ -161,6 +161,7 @@ Data may be synced using [the `promote_staging_data` script](#promoting-staging-
 asap-dev-data-{cohort,team-xxyy}
 ├── cohort_analysis
 │   ├── ${cohort_id}.sample_list.tsv
+│   ├── ${cohort_id}.initial_metadata.csv
 │   ├── ${cohort_id}.doublet_score.violin.png
 │   ├── ${cohort_id}.n_genes_by_counts.violin.png
 │   ├── ${cohort_id}.pct_counts_mt.violin.png
