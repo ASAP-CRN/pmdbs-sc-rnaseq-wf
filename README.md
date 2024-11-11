@@ -171,6 +171,7 @@ asap-dev-data-{cohort,team-xxyy}
 │   ├── ${cohort_id}.all_genes.csv
 │   ├── ${cohort_id}.hvg_genes.csv
 │   ├── ${cohort_id}.final_validation_metrics.csv
+│   ├── ${cohort_id}_scvi_model.tar.gz
 │   ├── ${cohort_id}.cell_types.csv
 │   ├── ${cohort_id}.final_adata.h5ad
 │   ├── ${cohort_id}.final_metadata.csv
@@ -180,7 +181,6 @@ asap-dev-data-{cohort,team-xxyy}
 │   ├── ${cohort_id}.groups.umap.png
 │   └── MANIFEST.tsv
 └── preprocess
-    ├── ${cohort_id}.scvi_model.tar.gz
     ├── ${sampleA_id}.filtered_feature_bc_matrix.h5
     ├── ${sampleA_id}.metrics_summary.csv
     ├── ${sampleA_id}.molecule_info.h5

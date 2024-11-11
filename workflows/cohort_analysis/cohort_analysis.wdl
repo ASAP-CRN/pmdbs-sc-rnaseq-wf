@@ -121,11 +121,9 @@ workflow cohort_analysis {
 			zones = zones
 	}
 
-	Array[String] cohort_analysis_intermediate_output_paths = [cluster_data.scvi_model_tar_gz] #!StringCoercion
-
 	call UploadFinalOutputs.upload_final_outputs as upload_preprocess_files {
 		input:
-			output_file_paths = flatten([preprocessing_output_file_paths, cohort_analysis_intermediate_output_paths]),
+			output_file_paths = preprocessing_output_file_paths,
 			staging_data_buckets = staging_data_buckets,
 			staging_data_path = "preprocess",
 			billing_project = billing_project,
@@ -147,6 +145,7 @@ workflow cohort_analysis {
 			filter_and_normalize.hvg_genes_csv
 		]),
 		[
+			cluster_data.scvi_model_tar_gz,
 			cluster_data.cell_types_csv
 		],
 		[
