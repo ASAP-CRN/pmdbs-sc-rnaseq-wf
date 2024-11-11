@@ -70,7 +70,8 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | String | team_id | Unique identifier for team; used for naming output files |
 | String | dataset_id | Unique identifier for dataset; used for metadata |
 | Array[[Sample](#sample)] | samples | The set of samples associated with this project |
-| File? | project_sample_metadata_csv | CSV containing all sample information including batch, condition, etc. |
+| File? | project_sample_metadata_csv | CSV containing all sample information including batch, condition, etc. This is required for the bulk RNAseq pipeline. For the `batch` column, there must be at least two distinct values. |
+| File? | project_condition_metadata_csv | CSV containing condition and intervention IDs used to categorize conditions into broader groups for DESeq2 pairwise condition ('Case', 'Control', and 'Other'). This is required for the bulk RNAseq pipeline. |
 | Boolean | run_project_cohort_analysis | Whether or not to run cohort analysis within the project |
 | String | raw_data_bucket | Raw data bucket; intermediate output files that are not final workflow outputs are stored here |
 | String | staging_data_bucket | Staging data bucket; final project-level outputs are stored here |
