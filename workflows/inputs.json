@@ -9,6 +9,7 @@
   "pmdbs_sc_rnaseq_analysis.n_top_genes": "Int (optional, default = 8000)",
   "pmdbs_sc_rnaseq_analysis.scvi_latent_key": "String (optional, default = \"X_scvi\")",
   "pmdbs_sc_rnaseq_analysis.batch_key": "String (optional, default = \"batch_id\")",
+  "pmdbs_sc_rnaseq_analysis.label_key": "String (optional, default = \"cell_type\")",
   "pmdbs_sc_rnaseq_analysis.cell_type_markers_list": "File",
   "pmdbs_sc_rnaseq_analysis.groups": "Array[String] (optional, default = [\"sample\", \"batch\", \"cell_type\"])",
   "pmdbs_sc_rnaseq_analysis.features": "Array[String] (optional, default = [\"n_genes_by_counts\", \"total_counts\", \"pct_counts_mt\", \"pct_counts_rb\", \"doublet_score\", \"S_score\", \"G2M_score\"])",

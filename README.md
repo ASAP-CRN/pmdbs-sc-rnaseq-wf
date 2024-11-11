@@ -55,6 +55,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | Int? | n_top_genes | Number of HVG genes to keep. [8000] |
 | String? | scvi_latent_key | Latent key to save the scVI latent to. ['X_scvi'] |
 | String? | batch_key | Key in AnnData object for batch information. ['batch_id'] |
+| String? | label_key | Key to reference 'cell_type' labels. ['cell_type'] |
 | File | cell_type_markers_list | CSV file containing a list of major cell type markers; used to annotate cells. |
 | Array[String]? | groups | Groups to produce umap plots for. ['sample', 'batch', 'cell_type', 'leiden_res_0.05', 'leiden_res_0.10', 'leiden_res_0.20', 'leiden_res_0.40'] |
 | Array[String]? | features | Features to produce umap plots for. ['n_genes_by_counts', 'total_counts', 'pct_counts_mt', 'pct_counts_rb', 'doublet_score', 'S_score', 'G2M_score'] |
