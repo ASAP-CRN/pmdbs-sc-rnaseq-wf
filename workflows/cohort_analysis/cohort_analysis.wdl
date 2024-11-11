@@ -138,7 +138,9 @@ workflow cohort_analysis {
 		],
 		merge_and_plot_qc_metrics.qc_plots_png,
 		select_all([
-			filter_and_normalize.final_validation_metrics
+			filter_and_normalize.final_validation_metrics,
+			filter_and_normalize.all_genes_csv,
+			filter_and_normalize.hvg_genes_csv
 		]),
 		[
 			cluster_data.cell_types_csv
@@ -172,6 +174,8 @@ workflow cohort_analysis {
 		Array[File] qc_plots_png = merge_and_plot_qc_metrics.qc_plots_png #!FileCoercion
 		File? filtered_adata_object = filter_and_normalize.filtered_adata_object
 		File? normalized_adata_object = filter_and_normalize.normalized_adata_object
+		File? all_genes_csv = filter_and_normalize.all_genes_csv #!FileCoercion
+		File? hvg_genes_csv = filter_and_normalize.hvg_genes_csv #!FileCoercion
 		File? final_validation_metrics = filter_and_normalize.final_validation_metrics #!FileCoercion
 
 		# Clustering output
@@ -310,21 +314,19 @@ task filter_and_normalize {
 				--adata-output ~{merged_adata_object_basename}_filtered_normalized.h5ad \
 				--n-top-genes ~{n_top_genes} \
 				--marker-genes ~{cell_type_markers_list} \
-				--output-all-genes ~{merged_adata_object_basename}_all_genes.csv \
-				--output-hvg-genes ~{merged_adata_object_basename}_hvg_genes.csv \
+				--output-all-genes ~{cohort_id}.all_genes.csv \
+				--output-hvg-genes ~{cohort_id}.hvg_genes.csv \
 				--output-validation-file ~{qc_validation_metrics}
 
 			mv "~{qc_validation_metrics}" "~{cohort_id}.final_validation_metrics.csv"
-			mv "~{merged_adata_object_basename}_all_genes.csv " "~{cohort_id}.all_genes.csv"
-			mv "~{merged_adata_object_basename}_hvg_genes.csv " "~{cohort_id}.hvg_genes.csv"
 
 			upload_outputs \
 				-b ~{billing_project} \
 				-d ~{raw_data_path} \
 				-i ~{write_tsv(workflow_info)} \
+				-o "~{cohort_id}.all_genes.csv" \
+				-o "~{cohort_id}.hvg_genes.csv" \
 				-o "~{cohort_id}.final_validation_metrics.csv"
-				-o "~{cohort_id}.all_genes.csv"
-				-o "~{cohort_id}.hvg_genes.csv"
 
 			echo true > cells_remaining_post_filter.txt
 		else
@@ -335,8 +337,9 @@ task filter_and_normalize {
 	output {
 		File? filtered_adata_object = if read_boolean("cells_remaining_post_filter.txt") then "~{merged_adata_object_basename}_filtered.h5ad" else my_none
 		File? normalized_adata_object = if read_boolean("cells_remaining_post_filter.txt") then "~{merged_adata_object_basename}_filtered_normalized.h5ad" else my_none
+		String? all_genes_csv = if read_boolean("cells_remaining_post_filter.txt") then "~{raw_data_path}/~{cohort_id}.all_genes.csv" else my_none
+		String? hvg_genes_csv = if read_boolean("cells_remaining_post_filter.txt") then "~{raw_data_path}/~{cohort_id}.hvg_genes.csv" else my_none
 		String? final_validation_metrics = if read_boolean("cells_remaining_post_filter.txt") then "~{raw_data_path}/~{cohort_id}.final_validation_metrics.csv" else my_none
-		# Not sure what to add here for all_genes.csv and hvg_genes.csv ?!?
 	}
 
 	runtime {

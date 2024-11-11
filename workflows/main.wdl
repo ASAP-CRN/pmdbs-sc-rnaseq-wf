@@ -167,6 +167,8 @@ workflow pmdbs_sc_rnaseq_analysis {
 		Array[Array[File]?] project_qc_plots_png = project_cohort_analysis.qc_plots_png
 		Array[File?] project_filtered_adata_object = project_cohort_analysis.filtered_adata_object
 		Array[File?] project_normalized_adata_object = project_cohort_analysis.normalized_adata_object
+		Array[File?] project_all_genes_csv = project_cohort_analysis.all_genes_csv
+		Array[File?] project_hvg_genes_csv = project_cohort_analysis.hvg_genes_csv
 		Array[File?] project_final_validation_metrics = project_cohort_analysis.final_validation_metrics
 
 		# Clustering outputs
@@ -198,6 +200,8 @@ workflow pmdbs_sc_rnaseq_analysis {
 		Array[File]? cohort_qc_plots_png = cross_team_cohort_analysis.qc_plots_png
 		File? cohort_filtered_adata_object = cross_team_cohort_analysis.filtered_adata_object
 		File? cohort_normalized_adata_object = cross_team_cohort_analysis.normalized_adata_object
+		File? cohort_all_genes_csv = cross_team_cohort_analysis.all_genes_csv
+		File? cohort_hvg_genes_csv = cross_team_cohort_analysis.hvg_genes_csv
 		File? cohort_final_validation_metrics = cross_team_cohort_analysis.final_validation_metrics
 
 		# Clustering outputs
