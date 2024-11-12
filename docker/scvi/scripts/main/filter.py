@@ -45,7 +45,7 @@ def main(args: argparse.Namespace):
     sc._settings.ScanpyConfig.n_jobs = -1
 
     # 0. load data
-    adata = sc.read_h5ad(args.adata_input, backed="r")  # type: ignore
+    adata = sc.read_h5ad(args.adata_input)  # type: ignore
     # 1. filter data
     adata = filter_adata(adata)
     # 2. save the filtered adata
