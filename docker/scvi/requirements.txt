@@ -31,7 +31,6 @@ igraph==0.11.5
 imageio==2.34.1
 importlib_resources==6.4.0
 jax==0.4.28
-jaxlib==0.4.28+cuda12.cudnn89
 Jinja2==3.1.4
 joblib==1.4.2
 kiwisolver==1.4.5
