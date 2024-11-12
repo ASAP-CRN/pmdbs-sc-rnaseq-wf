@@ -88,7 +88,7 @@ def main(args: argparse.Namespace):
     sc._settings.ScanpyConfig.n_jobs = -1
 
     # 0. load data
-    adata = sc.read_h5ad(args.adata_input)  # type: ignore
+    adata = sc.read_h5ad(args.adata_input, backed="r")  # type: ignore
     # 1. load marker_genes
     # alternative way to get markers:
     # https://github.com/NIH-CARD/brain-taxonomy/blob/main/markers/cellassign_card_markers.csv

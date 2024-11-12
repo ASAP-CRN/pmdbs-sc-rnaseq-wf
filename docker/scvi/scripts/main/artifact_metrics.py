@@ -85,7 +85,7 @@ def main(args: argparse.Namespace):
     basic logic with args as input
 
     """
-    adata = sc.read_h5ad(args.adata_input)  # type: ignore
+    adata = sc.read_h5ad(args.adata_input, backed="r")  # type: ignore
 
     # save the results
     report_dir = Path.cwd() / args.scib_report_dir

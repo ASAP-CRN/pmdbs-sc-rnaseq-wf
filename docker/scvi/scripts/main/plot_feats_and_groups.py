@@ -45,7 +45,7 @@ def main(args: argparse.Namespace):
     basic logic with args as input
 
     """
-    adata = sc.read_h5ad(args.adata_input)  # type: ignore
+    adata = sc.read_h5ad(args.adata_input, backed="r")  # type: ignore
     group_name = args.output_group_umap_plot_prefix
     feature_name = args.output_feature_umap_plot_prefix
     make_f_and_g_plots(adata, group_name, feature_name)

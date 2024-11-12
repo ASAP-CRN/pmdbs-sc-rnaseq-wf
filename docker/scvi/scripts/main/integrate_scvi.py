@@ -65,7 +65,7 @@ def main(args: argparse.Namespace):
 
     """
     # 0. load data
-    adata = ad.read_h5ad(args.adata_input)  # type: ignore
+    adata = ad.read_h5ad(args.adata_input, backed="r")  # type: ignore
     # 2. process data
     adata, model = integrate_with_scvi(adata, args.batch_key, args.latent_key)
     # 3. save the integrated adata and scvi model

@@ -11,7 +11,6 @@ def get_cluster_umap(adata: AnnData, latent_key: str) -> AnnData:
     # Set CPUs to use for parallel computing
     sc._settings.ScanpyConfig.n_jobs = -1
 
-    adata = sc.read_h5ad(args.adata_input)  # type: ignore
     # calculate neighbor graph on scVI latent
     sc.pp.neighbors(adata, n_neighbors=n_neighbors, use_rep=latent_key)
     # do leiden
@@ -28,7 +27,7 @@ def main(args: argparse.Namespace):
     basic logic with args as input
 
     """
-    adata = sc.read_h5ad(args.adata_input)  # type: ignore
+    adata = sc.read_h5ad(args.adata_input, backed="r")  # type: ignore
     adata = get_cluster_umap(adata, args.latent_key)
     adata.write_h5ad(filename=args.adata_output, compression="gzip")
 

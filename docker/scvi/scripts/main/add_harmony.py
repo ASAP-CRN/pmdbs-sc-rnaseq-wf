@@ -28,7 +28,7 @@ def main(args: argparse.Namespace):
     # Fixed parameters
     n_comps = 30
 
-    adata = sc.read_h5ad(args.adata_input)  # type: ignore
+    adata = sc.read_h5ad(args.adata_input, backed="r")  # type: ignore
     # operations done in place
     add_harmony(adata, n_comps=n_comps)
 
