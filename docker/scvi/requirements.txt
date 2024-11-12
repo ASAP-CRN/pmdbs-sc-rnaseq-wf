@@ -11,3 +11,4 @@ leidenalg==0.10.2
 harmonypy==0.0.9
 faiss-gpu==1.7.2
 scib-metrics==0.5.1
+numpy==1.26.4

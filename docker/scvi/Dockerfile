@@ -20,6 +20,7 @@ RUN apt-get -qq update \
 		build-essential \
 		wget \
 		time \
+		xxd \
 		curl \
 		zlib1g-dev \
 		libncursesw5-dev \
