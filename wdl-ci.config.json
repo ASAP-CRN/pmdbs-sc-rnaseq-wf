@@ -178,7 +178,6 @@
               "inputs": {
                 "cohort_id": "${cohort_id}",
                 "cell_annotated_adata_object": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.merged_adata_object.scvi_integrated.umap_cluster.annotate_cells.h5ad",
-                "scvi_latent_key": "${scvi_latent_key}",
                 "batch_key": "${batch_key}",
                 "label_key": "${label_key}",
                 "raw_data_path": "${cohort_raw_data_path}",
@@ -482,7 +481,8 @@
               "inputs": {
                 "sample_id": "${sample_id}",
                 "batch": "1",
-                "project_id": "team-jakobsson",
+                "team_id": "team-jakobsson",
+                "dataset_id": "DS_PMDBS_0004",
                 "cellbender_counts": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.cellbender.h5",
                 "raw_data_path": "${adata_raw_data_path}",
                 "workflow_info": "${workflow_info}",
