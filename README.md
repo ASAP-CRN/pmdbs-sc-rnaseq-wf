@@ -52,7 +52,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | Boolean? | run_cross_team_cohort_analysis | Whether to run downstream harmonization steps on all samples across projects. If set to false, only preprocessing steps (cellranger and generating the initial adata object(s)) will run for samples. [false] |
 | String | cohort_raw_data_bucket | Bucket to upload cross-team cohort intermediate files to. |
 | Array[String] | cohort_staging_data_buckets | Buckets to upload cross-team cohort analysis outputs to. |
-| Int? | n_top_genes | Number of HVG genes to keep. [8000] |
+| Int? | n_top_genes | Number of HVG genes to keep. [3000] |
 | String? | scvi_latent_key | Latent key to save the scVI latent to. ['X_scvi'] |
 | String? | batch_key | Key in AnnData object for batch information. ['batch_id'] |
 | String? | label_key | Key to reference 'cell_type' labels. ['cell_type'] |
