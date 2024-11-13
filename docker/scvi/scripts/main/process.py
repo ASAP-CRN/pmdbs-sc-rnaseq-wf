@@ -36,8 +36,8 @@ def process_adata(
     batch_key = args.batch_key
     # WARNING: using 'sample' can cause loess to fail in the highly_variable_genes function
     # HACK: using 'batch_id' instead of 'sample' for now
-    if batch_key == "sample":
-        print("WARNING: using 'batch_id' instead of 'sample' for now")
+    if batch_key == "sample" or batch_key == "sample_id":
+        print(f"WARNING: using 'batch_id' instead of '{batch_key}' for now")
         batch_key = "batch_id"
 
     hvgs_full = sc.experimental.pp.highly_variable_genes(
