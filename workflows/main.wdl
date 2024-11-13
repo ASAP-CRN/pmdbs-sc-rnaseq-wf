@@ -24,7 +24,7 @@ workflow pmdbs_sc_rnaseq_analysis {
 
 		Int n_top_genes = 3000
 		String scvi_latent_key = "X_scvi"
-		String batch_key = "sample_id"
+		String batch_key = "batch_id"
 		String label_key = "cell_type"
 		File cell_type_markers_list
 
