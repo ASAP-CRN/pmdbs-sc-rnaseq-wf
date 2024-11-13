@@ -389,7 +389,7 @@ task integrate_harmony_and_artifact_metrics {
 		python3 /opt/scripts/main/artifact_metrics.py \
 			--batch-key ~{batch_key} \
 			--label-key ~{label_key} \
-			--adata-input ~{cohort_id}.final.h5ad \
+			--adata-input ~{cohort_id}.final_adata.h5ad \
 			--output-report-dir scib_report_dir
 
 		mv "scib_report_dir/scib_report.csv" "scib_report_dir/~{cohort_id}.scib_report.csv"
