@@ -30,7 +30,6 @@ idna==3.7
 igraph==0.11.5
 imageio==2.34.1
 importlib_resources==6.4.0
-jax==0.4.28
 Jinja2==3.1.4
 joblib==1.4.2
 kiwisolver==1.4.5
@@ -128,3 +127,4 @@ umap-learn==0.5.6
 urllib3==2.2.1
 yarl==1.9.4
 zipp==3.19.1
+jax==0.4.28
