@@ -37,7 +37,7 @@ workflow pmdbs_sc_rnaseq_analysis {
 
 	String workflow_execution_path = "workflow_execution"
 	String workflow_name = "pmdbs_sc_rnaseq"
-	String workflow_version = "v2.1.0"
+	String workflow_version = "v2.2.0"
 	String workflow_release = "https://github.com/ASAP-CRN/pmdbs-sc-rnaseq-wf/releases/tag/pmdbs_sc_rnaseq_analysis-~{workflow_version}"
 
 	call GetWorkflowMetadata.get_workflow_metadata {

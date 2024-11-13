@@ -28,7 +28,7 @@ workflow preprocess {
 	String sub_workflow_name = "preprocess"
 	String cellranger_task_version = "1.1.0"
 	String cellbender_task_version = "1.0.0"
-	String adata_task_version = "1.0.1"
+	String adata_task_version = "1.1.0"
 
 	Array[Array[String]] workflow_info = [[run_timestamp, workflow_name, workflow_version, workflow_release]]
 
