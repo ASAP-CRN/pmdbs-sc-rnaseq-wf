@@ -7,7 +7,7 @@
       "tasks": {
         "merge_and_plot_qc_metrics": {
           "key": "merge_and_plot_qc_metrics",
-          "digest": "nlsfz2kfxtlr7tx6appdqpqlq53ablwj",
+          "digest": "t2d3pgajkxeietir2rre32d3cdebvf4d",
           "tests": [
             {
               "inputs": {
@@ -73,7 +73,7 @@
         },
         "filter_and_normalize": {
           "key": "filter_and_normalize",
-          "digest": "wi2mf6t7konbmghfts35mt7uyfsarrrp",
+          "digest": "gjazv7v6hzavuc4vifhnmitvjbiym36s",
           "tests": [
             {
               "inputs": {
@@ -137,7 +137,7 @@
         },
         "plot_groups_and_features": {
           "key": "plot_groups_and_features",
-          "digest": "2bk6dctm5isau5mz6do43wbx2kutkuww",
+          "digest": "qjpvnvq4efu6ooan4qaonq7selcuopdu",
           "tests": [
             {
               "inputs": {
@@ -172,7 +172,7 @@
         },
         "integrate_harmony_and_artifact_metrics": {
           "key": "integrate_harmony_and_artifact_metrics",
-          "digest": "ud7o6uxhnx6tdgbywdnt2hz6xergevfb",
+          "digest": "rjabab4aldma4p4d6qn6at2rmvfn5mbp",
           "tests": [
             {
               "inputs": {
@@ -232,7 +232,7 @@
       "tasks": {
         "integrate_sample_data": {
           "key": "integrate_sample_data",
-          "digest": "eysqa4xtjztgsltx53vi7wukncluv2xb",
+          "digest": "tqsnb7bkna4n2nwmvbqulz6dogsh6ud6",
           "tests": [
             {
               "inputs": {
@@ -267,7 +267,7 @@
         },
         "cluster_cells": {
           "key": "cluster_cells",
-          "digest": "x4qa7nlzlucxd3omxef3psgxgnfsuo3a",
+          "digest": "lfv5vcl4vgtr72ijcy6tlivakqe4mwf2",
           "tests": [
             {
               "inputs": {
@@ -291,7 +291,7 @@
         },
         "annotate_cells": {
           "key": "annotate_cells",
-          "digest": "asy5gjt2jt4uerphuvkjgk6d65uol66r",
+          "digest": "ip2oywlu4ftrpmu6vgus4vxvegr3lzw6",
           "tests": [
             {
               "inputs": {
@@ -475,7 +475,7 @@
         },
         "counts_to_adata": {
           "key": "counts_to_adata",
-          "digest": "z2hbjnseugfb57oxd2e5b33ybrp7gp4m",
+          "digest": "mbwqmtr5ubi6v425jtdddfkjeifr4pkn",
           "tests": [
             {
               "inputs": {
