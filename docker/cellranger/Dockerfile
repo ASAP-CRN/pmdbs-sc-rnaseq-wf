@@ -14,6 +14,7 @@ RUN apt-get -qq update \
 	&& apt-get -qq install \
 		wget \
 		time \
+		xxd \
 		python3-dev
 
 ARG CELLRANGER_VERSION

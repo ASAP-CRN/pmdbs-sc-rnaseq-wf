@@ -2,13 +2,16 @@
 
 
 ### _PREPROCESS_
-- _pre-preprocessing_: [`cellbender :: remove_technical_artifacts`](../../../workflows/preprocess/preprocess.wdl#L327-L350)
-- _preprocessing_: [`scrublet`](./main/preprocess.py)
+- _pre-preprocessing_: executed by wdl [`cellbender :: remove_technical_artifacts`](../../../workflows/preprocess/preprocess.wdl#L327-L350)
+- _doublets_ + _metadata_: [`prep_metadata.py`](./main/prep_metadata.py), calculates `scrublet` metrics and adds additional metadata.
 
 
-### _QC: metrics_
-- [`plot_qc_metrics.py`](./main/plot_qc_metrics.py)
+### _MERGE_AND_QC: merge and plot QC metrics_
+- [`merge_and_plot_qc.py`](./main/merge_and_plot_qc.py)
     - Merges adatas.
+    - plot general QC metrics for all cells
+    - Dump final metadata
+
     - NOTE:  merging here could be inefficient.  Stubs of code to create gene_list to pre-filter.
         - Consider filtering cells first... 'processing' filters genes to "highly variable".
 
@@ -20,7 +23,7 @@
 ### _FEATURE SELECTION_ 
 - _processing_: [`process.py`](./main/process.py)
     - Normalize + feature selection (i.e. identification of highly variable genes).
-
+    - add PCA
 
 ### _INTEGRATION_
 - [`integrate_scvi.py`](./main/integrate_scvi.py)
@@ -29,6 +32,7 @@
 
 ### _CLUSTERING_
 - _clustering_: `umap` ([`clustering_umap.py`](./main/clustering_umap.py))
+    - updated to do leiden at 4 resolutions - [0.05, 0.1, 0.2, 0.4]
     - In the future we may choose `mde` (`clustering_mde.py`) over `umap`, as it is super fast and efficient on a GPU, and the embeddings are only useful for visualization so the choice is semi-arbitrary.
 
 
@@ -39,11 +43,12 @@
 
 ### _HARMONY INTEGRATION_
 - [`add_harmony.py`](./main/add_harmony.py)
-    - Add PCA and Harmony integration.
+    - Add and Harmony integration.
+    - Dump final metadata
 
 
 ### _`SCIB` METRICS_
-- [`add_harmony.py`](./main/add_harmony.py)
+- [`artifact_metrics.py`](./main/artifact_metrics.py)
     - Compute `scib` metrics on final artifacts and generate a report.
 
 

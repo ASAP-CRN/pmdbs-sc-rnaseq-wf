@@ -19,6 +19,7 @@ workflow cohort_analysis {
 
 		String scvi_latent_key
 		String batch_key
+		String label_key
 
 		File cell_type_markers_list
 
@@ -37,7 +38,7 @@ workflow cohort_analysis {
 	}
 
 	String sub_workflow_name = "cohort_analysis"
-	String sub_workflow_version = "2.1.0"
+	String sub_workflow_version = "2.2.0"
 
 	Array[Array[String]] workflow_info = [[run_timestamp, workflow_name, workflow_version, workflow_release]]
 
@@ -69,7 +70,7 @@ workflow cohort_analysis {
 		input:
 			cohort_id = cohort_id,
 			merged_adata_object = merge_and_plot_qc_metrics.merged_adata_object, #!FileCoercion
-			qc_validation_metrics = merge_and_plot_qc_metrics.qc_validation_metrics,
+			qc_validation_metrics_csv = merge_and_plot_qc_metrics.qc_validation_metrics_csv,
 			n_top_genes = n_top_genes,
 			batch_key = batch_key,
 			cell_type_markers_list = cell_type_markers_list,
@@ -98,8 +99,8 @@ workflow cohort_analysis {
 		input:
 			cohort_id = cohort_id,
 			cell_annotated_adata_object = cluster_data.cell_annotated_adata_object,
-			scvi_latent_key = scvi_latent_key,
 			batch_key = batch_key,
+			label_key = label_key,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -110,7 +111,7 @@ workflow cohort_analysis {
 	call plot_groups_and_features {
 		input:
 			cohort_id = cohort_id,
-			harmony_integrated_adata_object = integrate_harmony_and_artifact_metrics.harmony_integrated_adata_object, #!FileCoercion
+			final_adata_object = integrate_harmony_and_artifact_metrics.final_adata_object, #!FileCoercion
 			groups = groups,
 			features = features,
 			raw_data_path = raw_data_path,
@@ -120,11 +121,9 @@ workflow cohort_analysis {
 			zones = zones
 	}
 
-	Array[String] cohort_analysis_intermediate_output_paths = [cluster_data.scvi_model_tar_gz] #!StringCoercion
-
 	call UploadFinalOutputs.upload_final_outputs as upload_preprocess_files {
 		input:
-			output_file_paths = flatten([preprocessing_output_file_paths, cohort_analysis_intermediate_output_paths]),
+			output_file_paths = preprocessing_output_file_paths,
 			staging_data_buckets = staging_data_buckets,
 			staging_data_path = "preprocess",
 			billing_project = billing_project,
@@ -135,16 +134,23 @@ workflow cohort_analysis {
 		[
 			write_cohort_sample_list.cohort_sample_list
 		],
+		[
+			merge_and_plot_qc_metrics.merged_adata_object,
+			merge_and_plot_qc_metrics.qc_initial_metadata_csv
+		],
 		merge_and_plot_qc_metrics.qc_plots_png,
 		select_all([
-			filter_and_normalize.final_validation_metrics
+			filter_and_normalize.final_validation_metrics,
+			filter_and_normalize.all_genes_csv,
+			filter_and_normalize.hvg_genes_csv
 		]),
 		[
-			cluster_data.cell_types_csv,
-			cluster_data.cell_annotated_metadata
+			cluster_data.scvi_model_tar_gz,
+			cluster_data.cell_types_csv
 		],
 		[
-			integrate_harmony_and_artifact_metrics.harmony_integrated_adata_object,
+			integrate_harmony_and_artifact_metrics.final_adata_object,
+			integrate_harmony_and_artifact_metrics.final_metadata_csv,
 			integrate_harmony_and_artifact_metrics.scib_report_results_csv,
 			integrate_harmony_and_artifact_metrics.scib_report_results_svg
 		],
@@ -167,10 +173,13 @@ workflow cohort_analysis {
 		File cohort_sample_list = write_cohort_sample_list.cohort_sample_list #!FileCoercion
 
 		# Merged adata objects, filtered and normalized adata objects, QC plots
-		File merged_adata_object = merge_and_plot_qc_metrics.merged_adata_object
+		File merged_adata_object = merge_and_plot_qc_metrics.merged_adata_object #!FileCoercion
+		File qc_initial_metadata_csv = merge_and_plot_qc_metrics.qc_initial_metadata_csv #!FileCoercion
 		Array[File] qc_plots_png = merge_and_plot_qc_metrics.qc_plots_png #!FileCoercion
 		File? filtered_adata_object = filter_and_normalize.filtered_adata_object
 		File? normalized_adata_object = filter_and_normalize.normalized_adata_object
+		File? all_genes_csv = filter_and_normalize.all_genes_csv #!FileCoercion
+		File? hvg_genes_csv = filter_and_normalize.hvg_genes_csv #!FileCoercion
 		File? final_validation_metrics = filter_and_normalize.final_validation_metrics #!FileCoercion
 
 		# Clustering output
@@ -179,10 +188,10 @@ workflow cohort_analysis {
 		File umap_cluster_adata_object = cluster_data.umap_cluster_adata_object
 		File cell_annotated_adata_object = cluster_data.cell_annotated_adata_object
 		File cell_types_csv = cluster_data.cell_types_csv
-		File cell_annotated_metadata = cluster_data.cell_annotated_metadata
 
 		# PCA and Harmony integrated adata objects and artifact metrics
-		File harmony_integrated_adata_object = integrate_harmony_and_artifact_metrics.harmony_integrated_adata_object #!FileCoercion
+		File final_adata_object = integrate_harmony_and_artifact_metrics.final_adata_object #!FileCoercion
+		File final_metadata_csv = integrate_harmony_and_artifact_metrics.final_metadata_csv #!FileCoercion
 		File scib_report_results_csv = integrate_harmony_and_artifact_metrics.scib_report_results_csv #!FileCoercion
 		File scib_report_results_svg = integrate_harmony_and_artifact_metrics.scib_report_results_svg #!FileCoercion
 
@@ -219,9 +228,10 @@ task merge_and_plot_qc_metrics {
 			echo -e "${sample}\t${adata_path}" >> adata_samples_paths.tsv
 		done < ~{write_lines(preprocessed_adata_objects)}
 
-		python3 /opt/scripts/main/plot_qc_metrics.py \
+		python3 /opt/scripts/main/merge_and_plot_qc.py \
 			--adata-objects-fofn adata_samples_paths.tsv \
 			--adata-output ~{cohort_id}.merged_adata_object.h5ad \
+			--output-metadata-file ~{cohort_id}.initial_metadata.csv \
 			--output-validation-file ~{cohort_id}.validation_metrics.csv
 
 		mv "plots/violin_n_genes_by_counts.png" "plots/~{cohort_id}.n_genes_by_counts.violin.png"
@@ -234,6 +244,8 @@ task merge_and_plot_qc_metrics {
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
+			-o "~{cohort_id}.merged_adata_object.h5ad" \
+			-o "~{cohort_id}.initial_metadata.csv" \
 			-o plots/"~{cohort_id}.n_genes_by_counts.violin.png" \
 			-o plots/"~{cohort_id}.total_counts.violin.png" \
 			-o plots/"~{cohort_id}.pct_counts_mt.violin.png" \
@@ -242,8 +254,9 @@ task merge_and_plot_qc_metrics {
 	>>>
 
 	output {
-		File merged_adata_object = "~{cohort_id}.merged_adata_object.h5ad"
-		File qc_validation_metrics = "~{cohort_id}.validation_metrics.csv"
+		String merged_adata_object = "~{raw_data_path}/~{cohort_id}.merged_adata_object.h5ad"
+		String qc_initial_metadata_csv = "~{raw_data_path}/~{cohort_id}.initial_metadata.csv"
+		File qc_validation_metrics_csv = "~{cohort_id}.validation_metrics.csv"
 
 		Array[String] qc_plots_png = [
 			"~{raw_data_path}/~{cohort_id}.n_genes_by_counts.violin.png",
@@ -255,7 +268,7 @@ task merge_and_plot_qc_metrics {
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_1"
+		docker: "~{container_registry}/scvi:1.1.0_2"
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -269,7 +282,7 @@ task filter_and_normalize {
 	input {
 		String cohort_id
 		File merged_adata_object
-		File qc_validation_metrics
+		File qc_validation_metrics_csv
 
 		Int n_top_genes
 		String batch_key
@@ -296,7 +309,7 @@ task filter_and_normalize {
 		python3 /opt/scripts/main/filter.py \
 			--adata-input ~{merged_adata_object} \
 			--adata-output ~{merged_adata_object_basename}_filtered.h5ad \
-			--output-validation-file ~{qc_validation_metrics}
+			--output-validation-file ~{qc_validation_metrics_csv}
 
 		# TODO see whether this is still required given the change to python
 		# If any cells remain after filtering, the data is normalized and variable genes are identified
@@ -307,14 +320,18 @@ task filter_and_normalize {
 				--adata-output ~{merged_adata_object_basename}_filtered_normalized.h5ad \
 				--n-top-genes ~{n_top_genes} \
 				--marker-genes ~{cell_type_markers_list} \
-				--output-validation-file ~{qc_validation_metrics}
+				--output-all-genes ~{cohort_id}.all_genes.csv \
+				--output-hvg-genes ~{cohort_id}.hvg_genes.csv \
+				--output-validation-file ~{qc_validation_metrics_csv}
 
-			mv "~{qc_validation_metrics}" "~{cohort_id}.final_validation_metrics.csv"
+			mv "~{qc_validation_metrics_csv}" "~{cohort_id}.final_validation_metrics.csv"
 
 			upload_outputs \
 				-b ~{billing_project} \
 				-d ~{raw_data_path} \
 				-i ~{write_tsv(workflow_info)} \
+				-o "~{cohort_id}.all_genes.csv" \
+				-o "~{cohort_id}.hvg_genes.csv" \
 				-o "~{cohort_id}.final_validation_metrics.csv"
 
 			echo true > cells_remaining_post_filter.txt
@@ -326,11 +343,13 @@ task filter_and_normalize {
 	output {
 		File? filtered_adata_object = if read_boolean("cells_remaining_post_filter.txt") then "~{merged_adata_object_basename}_filtered.h5ad" else my_none
 		File? normalized_adata_object = if read_boolean("cells_remaining_post_filter.txt") then "~{merged_adata_object_basename}_filtered_normalized.h5ad" else my_none
+		String? all_genes_csv = if read_boolean("cells_remaining_post_filter.txt") then "~{raw_data_path}/~{cohort_id}.all_genes.csv" else my_none
+		String? hvg_genes_csv = if read_boolean("cells_remaining_post_filter.txt") then "~{raw_data_path}/~{cohort_id}.hvg_genes.csv" else my_none
 		String? final_validation_metrics = if read_boolean("cells_remaining_post_filter.txt") then "~{raw_data_path}/~{cohort_id}.final_validation_metrics.csv" else my_none
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_1"
+		docker: "~{container_registry}/scvi:1.1.0_2"
 		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -345,8 +364,8 @@ task integrate_harmony_and_artifact_metrics {
 		String cohort_id
 		File cell_annotated_adata_object
 
-		String scvi_latent_key
 		String batch_key
+		String label_key
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -355,7 +374,6 @@ task integrate_harmony_and_artifact_metrics {
 		String zones
 	}
 
-	String cell_annotated_adata_object_basename = basename(cell_annotated_adata_object, ".h5ad")
 	Int mem_gb = ceil(size(cell_annotated_adata_object, "GB") * 5 + 20)
 	Int disk_size = ceil(size(cell_annotated_adata_object, "GB") * 4 + 20)
 
@@ -365,12 +383,13 @@ task integrate_harmony_and_artifact_metrics {
 		python3 /opt/scripts/main/add_harmony.py \
 			--batch-key ~{batch_key} \
 			--adata-input ~{cell_annotated_adata_object} \
-			--adata-output ~{cell_annotated_adata_object_basename}.harmony_integrated.h5ad
+			--adata-output ~{cohort_id}.final_adata.h5ad \
+			--output-metadata-file ~{cohort_id}.final_metadata.csv
 
 		python3 /opt/scripts/main/artifact_metrics.py \
-			--latent-key ~{scvi_latent_key} \
 			--batch-key ~{batch_key} \
-			--adata-input ~{cell_annotated_adata_object_basename}.harmony_integrated.h5ad \
+			--label-key ~{label_key} \
+			--adata-input ~{cohort_id}.final_adata.h5ad \
 			--output-report-dir scib_report_dir
 
 		mv "scib_report_dir/scib_report.csv" "scib_report_dir/~{cohort_id}.scib_report.csv"
@@ -380,19 +399,21 @@ task integrate_harmony_and_artifact_metrics {
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{cell_annotated_adata_object_basename}.harmony_integrated.h5ad" \
+			-o "~{cohort_id}.final_adata.h5ad" \
+			-o "~{cohort_id}.final_metadata.csv" \
 			-o "scib_report_dir/~{cohort_id}.scib_report.csv" \
 			-o "scib_report_dir/~{cohort_id}.scib_results.svg"
 	>>>
 
 	output {
-		String harmony_integrated_adata_object = "~{raw_data_path}/~{cell_annotated_adata_object_basename}.harmony_integrated.h5ad"
+		String final_adata_object = "~{raw_data_path}/~{cohort_id}.final_adata.h5ad"
+		String final_metadata_csv = "~{raw_data_path}/~{cohort_id}.final_metadata.csv"
 		String scib_report_results_csv = "~{raw_data_path}/~{cohort_id}.scib_report.csv"
 		String scib_report_results_svg = "~{raw_data_path}/~{cohort_id}.scib_results.svg"
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_1"
+		docker: "~{container_registry}/scvi:1.1.0_2"
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -408,7 +429,7 @@ task integrate_harmony_and_artifact_metrics {
 task plot_groups_and_features {
 	input {
 		String cohort_id
-		File harmony_integrated_adata_object
+		File final_adata_object
 
 		Array[String] groups
 		Array[String] features
@@ -420,14 +441,14 @@ task plot_groups_and_features {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(harmony_integrated_adata_object, "GB") * 5 + 20)
-	Int disk_size = ceil(size(harmony_integrated_adata_object, "GB") * 4 + 20)
+	Int mem_gb = ceil(size(final_adata_object, "GB") * 5 + 20)
+	Int disk_size = ceil(size(final_adata_object, "GB") * 4 + 20)
 
 	command <<<
 		set -euo pipefail
 
 		python3 /opt/scripts/main/plot_feats_and_groups.py \
-			--adata-input ~{harmony_integrated_adata_object} \
+			--adata-input ~{final_adata_object} \
 			--group ~{sep=',' groups} \
 			--output-group-umap-plot-prefix "~{cohort_id}" \
 			--feature ~{sep=',' features} \
@@ -450,7 +471,7 @@ task plot_groups_and_features {
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_1"
+		docker: "~{container_registry}/scvi:1.1.0_2"
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"

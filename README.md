@@ -52,11 +52,12 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | Boolean? | run_cross_team_cohort_analysis | Whether to run downstream harmonization steps on all samples across projects. If set to false, only preprocessing steps (cellranger and generating the initial adata object(s)) will run for samples. [false] |
 | String | cohort_raw_data_bucket | Bucket to upload cross-team cohort intermediate files to. |
 | Array[String] | cohort_staging_data_buckets | Buckets to upload cross-team cohort analysis outputs to. |
-| Int? | n_top_genes | Number of HVG genes to keep. [8000] |
+| Int? | n_top_genes | Number of HVG genes to keep. [3000] |
 | String? | scvi_latent_key | Latent key to save the scVI latent to. ['X_scvi'] |
 | String? | batch_key | Key in AnnData object for batch information. ['batch_id'] |
+| String? | label_key | Key to reference 'cell_type' labels. ['cell_type'] |
 | File | cell_type_markers_list | CSV file containing a list of major cell type markers; used to annotate cells. |
-| Array[String]? | groups | Groups to produce umap plots for. ['sample', 'batch', 'cell_type'] |
+| Array[String]? | groups | Groups to produce umap plots for. ['sample', 'batch', 'cell_type', 'leiden_res_0.05', 'leiden_res_0.10', 'leiden_res_0.20', 'leiden_res_0.40'] |
 | Array[String]? | features | Features to produce umap plots for. ['n_genes_by_counts', 'total_counts', 'pct_counts_mt', 'pct_counts_rb', 'doublet_score', 'S_score', 'G2M_score'] |
 | String | container_registry | Container registry where workflow Docker images are hosted. |
 | String? | zones | GCP zones where compute will take place. ['us-central1-c us-central1-f'] |
@@ -67,9 +68,11 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 | Type | Name | Description |
 | :- | :- | :- |
-| String | project_id | Unique identifier for project; used for naming output files |
+| String | team_id | Unique identifier for team; used for naming output files |
+| String | dataset_id | Unique identifier for dataset; used for metadata |
 | Array[[Sample](#sample)] | samples | The set of samples associated with this project |
-| File? | project_sample_metadata_csv | CSV containing all sample information including batch, condition, etc. |
+| File? | project_sample_metadata_csv | CSV containing all sample information including batch, condition, etc. This is required for the bulk RNAseq pipeline. For the `batch` column, there must be at least two distinct values. |
+| File? | project_condition_metadata_csv | CSV containing condition and intervention IDs used to categorize conditions into broader groups for DESeq2 pairwise condition ('Case', 'Control', and 'Other'). This is required for the bulk RNAseq pipeline. |
 | Boolean | run_project_cohort_analysis | Whether or not to run cohort analysis within the project |
 | String | raw_data_bucket | Raw data bucket; intermediate output files that are not final workflow outputs are stored here |
 | String | staging_data_bucket | Staging data bucket; final project-level outputs are stored here |
@@ -89,8 +92,9 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 The inputs JSON may be generated manually, however when running a large number of samples, this can become unwieldly. The `generate_inputs` utility script may be used to automatically generate the inputs JSON. The script requires the libraries outlined in [the requirements.txt file](wf-common/util/requirements.txt) and the following inputs:
 
-- `project-tsv`: One or more project TSVs with one row per sample and columns project_id, sample_id, batch, fastq_path. All samples from all projects may be included in the same project TSV, or multiple project TSVs may be provided.
-    - `project_id`: A unique identifier for the project from which the sample(s) arose
+- `project-tsv`: One or more project TSVs with one row per sample and columns team_id, sample_id, batch, fastq_path. All samples from all projects may be included in the same project TSV, or multiple project TSVs may be provided.
+    - `team_id`: A unique identifier for the team from which the sample(s) arose
+    - `dataset_id`: A unique identifier for the dataset from which the sample(s) arose
     - `sample_id`: A unique identifier for the sample within the project
     - `batch`: The sample's batch
     - `fastq_path`: The directory in which paired sample FASTQs may be found, including the gs:// bucket name and path
@@ -117,7 +121,7 @@ Example usage:
 
 ## Output structure
 
-- `cohort_id`: either the `project_id` for project-level cohort analysis, or the `cohort_id` for the full cohort
+- `cohort_id`: either the `team_id` for project-level cohort analysis, or the `cohort_id` for the full cohort
 - `workflow_run_timestamp`: format: `%Y-%m-%dT%H-%M-%SZ`
 - The list of samples used to generate the cohort analysis will be output alongside other cohort analysis outputs in the staging data bucket (`${cohort_id}.sample_list.tsv`)
 - The MANIFEST.tsv file in the staging data bucket describes the file name, md5 hash, timestamp, workflow version, workflow name, and workflow release for the run used to generate each file in that directory
@@ -157,22 +161,26 @@ Data may be synced using [the `promote_staging_data` script](#promoting-staging-
 asap-dev-data-{cohort,team-xxyy}
 ├── cohort_analysis
 │   ├── ${cohort_id}.sample_list.tsv
+│   ├── ${cohort_id}.merged_adata_object.h5ad
+│   ├── ${cohort_id}.initial_metadata.csv
 │   ├── ${cohort_id}.doublet_score.violin.png
 │   ├── ${cohort_id}.n_genes_by_counts.violin.png
 │   ├── ${cohort_id}.pct_counts_mt.violin.png
 │   ├── ${cohort_id}.pct_counts_rb.violin.png
 │   ├── ${cohort_id}.total_counts.violin.png
+│   ├── ${cohort_id}.all_genes.csv
+│   ├── ${cohort_id}.hvg_genes.csv
 │   ├── ${cohort_id}.final_validation_metrics.csv
+│   ├── ${cohort_id}_scvi_model.tar.gz
 │   ├── ${cohort_id}.cell_types.csv
-│   ├── ${cohort_id}.annotate_cells.metadata.csv
-│   ├── ${cohort_id}.merged_adata_object.scvi_integrated.umap_cluster.annotate_cells.harmony_integrated.h5ad
+│   ├── ${cohort_id}.final_adata.h5ad
+│   ├── ${cohort_id}.final_metadata.csv
 │   ├── ${cohort_id}.scib_report.csv
 │   ├── ${cohort_id}.scib_results.svg
 │   ├── ${cohort_id}.features.umap.png
 │   ├── ${cohort_id}.groups.umap.png
 │   └── MANIFEST.tsv
 └── preprocess
-    ├── ${cohort_id}.scvi_model.tar.gz
     ├── ${sampleA_id}.filtered_feature_bc_matrix.h5
     ├── ${sampleA_id}.metrics_summary.csv
     ├── ${sampleA_id}.molecule_info.h5
@@ -314,3 +322,8 @@ Docker images can be build using the [`build_docker_images`](https://github.com/
 [`wdl-ci`](https://github.com/DNAstack/wdl-ci) provides tools to validate and test workflows and tasks written in [Workflow Description Language (WDL)](https://github.com/openwdl/wdl). In addition to the tests packaged in `wdl-ci`, the [pmdbs-sc-rnaseq-wdl-ci-custom-test-dir](./pmdbs-sc-rnaseq-wdl-ci-custom-test-dir) is a directory containing custom WDL-based tests that are used to test workflow tasks. `wdl-ci` in this repository is set up to run on pull request.
 
 In general, `wdl-ci` will use inputs provided in the [wdl-ci.config.json](./wdl-ci.config.json) and compare current outputs and validated outputs based on changed tasks/workflows to ensure outputs are still valid by meeting the critera in the specified tests. For example, if the Cell Ranger task in our workflow was changed, then this task would be submitted and that output would be considered the "current output". When inspecting the raw counts generated by Cell Ranger, there is a test specified in the [wdl-ci.config.json](./wdl-ci.config.json) called, "check_hdf5". The test will compare the "current output" and "validated output" (provided in the [wdl-ci.config.json](./wdl-ci.config.json)) to make sure that the raw_feature_bc_matrix.h5 file is still a valid HDF5 file.
+
+
+# Notes 
+## Cell type marker table 
+https://github.com/NIH-CARD/brain-taxonomy/blob/main/markers/cellassign_card_markers.csv

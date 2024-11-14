@@ -25,9 +25,10 @@ workflow pmdbs_sc_rnaseq_analysis {
 		Int n_top_genes = 3000
 		String scvi_latent_key = "X_scvi"
 		String batch_key = "batch_id"
+		String label_key = "cell_type"
 		File cell_type_markers_list
 
-		Array[String] groups = ["sample", "batch", "cell_type"]
+		Array[String] groups = ["sample", "batch", "cell_type", "leiden_res_0.05", "leiden_res_0.10", "leiden_res_0.20", "leiden_res_0.40"]
 		Array[String] features = ["n_genes_by_counts", "total_counts", "pct_counts_mt", "pct_counts_rb", "doublet_score", "S_score", "G2M_score"]
 
 		String container_registry
@@ -36,7 +37,7 @@ workflow pmdbs_sc_rnaseq_analysis {
 
 	String workflow_execution_path = "workflow_execution"
 	String workflow_name = "pmdbs_sc_rnaseq"
-	String workflow_version = "v2.1.0"
+	String workflow_version = "v2.2.0"
 	String workflow_release = "https://github.com/ASAP-CRN/pmdbs-sc-rnaseq-wf/releases/tag/pmdbs_sc_rnaseq_analysis-~{workflow_version}"
 
 	call GetWorkflowMetadata.get_workflow_metadata {
@@ -49,7 +50,8 @@ workflow pmdbs_sc_rnaseq_analysis {
 
 		call Preprocess.preprocess {
 			input:
-				project_id = project.project_id,
+				team_id = project.team_id,
+				dataset_id = project.dataset_id,
 				samples = project.samples,
 				cellranger_reference_data = cellranger_reference_data,
 				cellbender_fpr = cellbender_fpr,
@@ -82,13 +84,14 @@ workflow pmdbs_sc_rnaseq_analysis {
 		if (project.run_project_cohort_analysis) {
 			call CohortAnalysis.cohort_analysis as project_cohort_analysis {
 				input:
-					cohort_id = project.project_id,
+					cohort_id = project.team_id,
 					project_sample_ids = preprocess.project_sample_ids,
 					preprocessed_adata_objects = preprocess.adata_object,
 					preprocessing_output_file_paths = preprocessing_output_file_paths,
 					n_top_genes = n_top_genes,
 					scvi_latent_key =scvi_latent_key,
 					batch_key = batch_key,
+					label_key = label_key,
 					cell_type_markers_list = cell_type_markers_list,
 					groups = groups,
 					features = features,
@@ -117,6 +120,7 @@ workflow pmdbs_sc_rnaseq_analysis {
 				n_top_genes = n_top_genes,
 				scvi_latent_key =scvi_latent_key,
 				batch_key = batch_key,
+				label_key = label_key,
 				cell_type_markers_list = cell_type_markers_list,
 				groups = groups,
 				features = features,
@@ -160,9 +164,12 @@ workflow pmdbs_sc_rnaseq_analysis {
 
 		# Merged adata objects, filtered and normalized adata objects, QC plots
 		Array[File?] project_merged_adata_object = project_cohort_analysis.merged_adata_object
+		Array[File?] project_qc_initial_metadata_csv = project_cohort_analysis.qc_initial_metadata_csv
 		Array[Array[File]?] project_qc_plots_png = project_cohort_analysis.qc_plots_png
 		Array[File?] project_filtered_adata_object = project_cohort_analysis.filtered_adata_object
 		Array[File?] project_normalized_adata_object = project_cohort_analysis.normalized_adata_object
+		Array[File?] project_all_genes_csv = project_cohort_analysis.all_genes_csv
+		Array[File?] project_hvg_genes_csv = project_cohort_analysis.hvg_genes_csv
 		Array[File?] project_final_validation_metrics = project_cohort_analysis.final_validation_metrics
 
 		# Clustering outputs
@@ -171,10 +178,10 @@ workflow pmdbs_sc_rnaseq_analysis {
 		Array[File?] project_umap_cluster_adata_object = project_cohort_analysis.umap_cluster_adata_object
 		Array[File?] project_cell_annotated_adata_object = project_cohort_analysis.cell_annotated_adata_object
 		Array[File?] project_cell_types_csv = project_cohort_analysis.cell_types_csv
-		Array[File?] project_cell_annotated_metadata = project_cohort_analysis.cell_annotated_metadata
 
 		# PCA and Harmony integrated adata objects and artifact metrics
-		Array[File?] project_harmony_integrated_adata_object = project_cohort_analysis.harmony_integrated_adata_object
+		Array[File?] project_final_adata_object = project_cohort_analysis.final_adata_object
+		Array[File?] project_final_metadata_csv = project_cohort_analysis.final_metadata_csv
 		Array[File?] project_scib_report_results_csv = project_cohort_analysis.scib_report_results_csv
 		Array[File?] project_scib_report_results_svg = project_cohort_analysis.scib_report_results_svg
 
@@ -191,9 +198,12 @@ workflow pmdbs_sc_rnaseq_analysis {
 
 		# Merged adata objects, filtered and normalized adata objects, QC plots
 		File? cohort_merged_adata_object = cross_team_cohort_analysis.merged_adata_object
+		File? cohort_qc_initial_metadata_csv = cross_team_cohort_analysis.qc_initial_metadata_csv
 		Array[File]? cohort_qc_plots_png = cross_team_cohort_analysis.qc_plots_png
 		File? cohort_filtered_adata_object = cross_team_cohort_analysis.filtered_adata_object
 		File? cohort_normalized_adata_object = cross_team_cohort_analysis.normalized_adata_object
+		File? cohort_all_genes_csv = cross_team_cohort_analysis.all_genes_csv
+		File? cohort_hvg_genes_csv = cross_team_cohort_analysis.hvg_genes_csv
 		File? cohort_final_validation_metrics = cross_team_cohort_analysis.final_validation_metrics
 
 		# Clustering outputs
@@ -202,10 +212,10 @@ workflow pmdbs_sc_rnaseq_analysis {
 		File? cohort_umap_cluster_adata_object = cross_team_cohort_analysis.umap_cluster_adata_object
 		File? cohort_cell_annotated_adata_object = cross_team_cohort_analysis.cell_annotated_adata_object
 		File? cohort_cell_types_csv = cross_team_cohort_analysis.cell_types_csv
-		File? cohort_cell_annotated_metadata = cross_team_cohort_analysis.cell_annotated_metadata
 
 		# PCA and Harmony integrated adata objects and artifact metrics
-		File? cohort_harmony_integrated_adata_object = cross_team_cohort_analysis.harmony_integrated_adata_object
+		File? cohort_final_adata_object = cross_team_cohort_analysis.final_adata_object
+		File? cohort_final_metadata_csv = cross_team_cohort_analysis.final_metadata_csv
 		File? cohort_scib_report_results_csv = cross_team_cohort_analysis.scib_report_results_csv
 		File? cohort_scib_report_results_svg = cross_team_cohort_analysis.scib_report_results_svg
 
@@ -231,8 +241,9 @@ workflow pmdbs_sc_rnaseq_analysis {
 		n_top_genes: {help: "Number of HVG genes to keep. [8000]"}
 		scvi_latent_key: {help: "Latent key to save the scVI latent to. ['X_scvi']"}
 		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		label_key : {help: "Key to reference 'cell_type' labels. ['cell_type']"}
 		cell_type_markers_list: {help: "CSV file containing a list of major cell type markers; used to annotate clusters."}
-		groups: {help: "Groups to produce umap plots for. ['sample', 'batch', 'cell_type']"}
+		groups: {help: "Groups to produce umap plots for. ['sample', 'batch', 'cell_type', 'leiden_res_0.05', 'leiden_res_0.10', 'leiden_res_0.20', 'leiden_res_0.40']"}
 		features: {help: "Features to produce umap plots for. ['n_genes_by_counts', 'total_counts', 'pct_counts_mt', 'pct_counts_rb', 'doublet_score', 'S_score', 'G2M_score']"}
 		container_registry: {help: "Container registry where workflow Docker images are hosted."}
 		zones: {help: "Space-delimited set of GCP zones to spin up compute in."}

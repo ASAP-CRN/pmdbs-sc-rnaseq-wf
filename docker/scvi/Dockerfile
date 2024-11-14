@@ -10,6 +10,8 @@ ARG IMAGE_NAME
 ENV IMAGE_NAME "${IMAGE_NAME}"
 ARG IMAGE_TAG
 ENV IMAGE_TAG "${IMAGE_TAG}"
+ARG JAX_VERSION
+ENV JAX_VERSION "${JAX_VERSION}"
 ARG CUDA_VERSION
 ENV CUDA_VERSION "${CUDA_VERSION}"
 
@@ -20,6 +22,7 @@ RUN apt-get -qq update \
 		build-essential \
 		wget \
 		time \
+		xxd \
 		curl \
 		zlib1g-dev \
 		libncursesw5-dev \
@@ -50,7 +53,7 @@ COPY ./requirements.txt /opt/requirements.txt
 RUN python3 -m pip install -r /opt/requirements.txt
 
 # CUDA-enabled jaxlib is needed
-RUN python3 -m pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+RUN python3 -m pip install --upgrade "jax[cuda12_pip]==${JAX_VERSION}" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
 # Add override scripts
 COPY scripts/main /opt/scripts/main
