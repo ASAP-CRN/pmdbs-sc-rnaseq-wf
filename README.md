@@ -133,7 +133,7 @@ The raw data bucket will contain *some* artifacts generated as part of workflow 
 In the workflow, task outputs are either specified as `String` (final outputs, which will be copied in order to live in raw data buckets and staging buckets) or `File` (intermediate outputs that are periodically cleaned up, which will live in the cromwell-output bucket). This was implemented to reduce storage costs. Preprocess final outputs are defined in the workflow at [main.wdl](workflows/main.wdl#L68-L82) and cohort analysis final outputs are defined at [cohort_analysis.wdl](workflows/cohort_analysis/cohort_analysis.wdl#L133-L161).
 
 ```bash
-asap-raw-data-{cohort,team-xxyy}-{source}-{dataset}
+asap-raw-{cohort,team-xxyy}-{source}-{dataset}
 └── workflow_execution
     ├── cohort_analysis
     │   └──${cohort_analysis_workflow_version}
@@ -153,12 +153,12 @@ asap-raw-data-{cohort,team-xxyy}-{source}-{dataset}
 
 ### Staging data (intermediate workflow objects and final workflow outputs for the latest run of the workflow)
 
-Following QC by researchers, the objects in the dev or uat bucket are synced into the curated data buckets, maintaining the same file structure. Curated data buckets are named `asap-curated-data-{cohort,team-xxyy}-{source}-{dataset}`.
+Following QC by researchers, the objects in the dev or uat bucket are synced into the curated data buckets, maintaining the same file structure. Curated data buckets are named `asap-curated-{cohort,team-xxyy}-{source}-{dataset}`.
 
 Data may be synced using [the `promote_staging_data` script](#promoting-staging-data).
 
 ```bash
-asap-dev-data-{cohort,team-xxyy}-{source}-{dataset}
+asap-dev-{cohort,team-xxyy}-{source}-{dataset}
 ├── cohort_analysis
 │   ├── ${cohort_id}.sample_list.tsv
 │   ├── ${cohort_id}.merged_adata_object.h5ad
