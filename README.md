@@ -134,21 +134,22 @@ In the workflow, task outputs are either specified as `String` (final outputs, w
 
 ```bash
 asap-raw-{cohort,team-xxyy}-{source}-{dataset}
-└── workflow_execution
-    ├── cohort_analysis
-    │   └──${cohort_analysis_workflow_version}
-    │       └── ${workflow_run_timestamp}
-    │            └── <cohort outputs>
-    └── preprocess  // only produced in project raw data buckets, not in the full cohort bucket
-        ├── cellranger
-        │   └── ${cellranger_task_version}
-        │       └── <cellranger output>
-        ├── remove_technical_artifacts
-        │   └── ${cellbender_task_version}
-        │       └── <remove_technical_artifacts output>
-        └── counts_to_adata
-            └── ${adata_task_version}
-                └── <counts_to_adata output>
+└── pmdbs_sc_rnaseq
+    └── workflow_execution
+        ├── cohort_analysis
+        │   └──${cohort_analysis_workflow_version}
+        │       └── ${workflow_run_timestamp}
+        │            └── <cohort outputs>
+        └── preprocess  // only produced in project raw data buckets, not in the full cohort bucket
+            ├── cellranger
+            │   └── ${cellranger_task_version}
+            │       └── <cellranger output>
+            ├── remove_technical_artifacts
+            │   └── ${cellbender_task_version}
+            │       └── <remove_technical_artifacts output>
+            └── counts_to_adata
+                └── ${adata_task_version}
+                    └── <counts_to_adata output>
 ```
 
 ### Staging data (intermediate workflow objects and final workflow outputs for the latest run of the workflow)
@@ -159,72 +160,73 @@ Data may be synced using [the `promote_staging_data` script](#promoting-staging-
 
 ```bash
 asap-dev-{cohort,team-xxyy}-{source}-{dataset}
-├── cohort_analysis
-│   ├── ${cohort_id}.sample_list.tsv
-│   ├── ${cohort_id}.merged_adata_object.h5ad
-│   ├── ${cohort_id}.initial_metadata.csv
-│   ├── ${cohort_id}.doublet_score.violin.png
-│   ├── ${cohort_id}.n_genes_by_counts.violin.png
-│   ├── ${cohort_id}.pct_counts_mt.violin.png
-│   ├── ${cohort_id}.pct_counts_rb.violin.png
-│   ├── ${cohort_id}.total_counts.violin.png
-│   ├── ${cohort_id}.all_genes.csv
-│   ├── ${cohort_id}.hvg_genes.csv
-│   ├── ${cohort_id}.final_validation_metrics.csv
-│   ├── ${cohort_id}_scvi_model.tar.gz
-│   ├── ${cohort_id}.cell_types.csv
-│   ├── ${cohort_id}.final_adata.h5ad
-│   ├── ${cohort_id}.final_metadata.csv
-│   ├── ${cohort_id}.scib_report.csv
-│   ├── ${cohort_id}.scib_results.svg
-│   ├── ${cohort_id}.features.umap.png
-│   ├── ${cohort_id}.groups.umap.png
-│   └── MANIFEST.tsv
-└── preprocess
-    ├── ${sampleA_id}.filtered_feature_bc_matrix.h5
-    ├── ${sampleA_id}.metrics_summary.csv
-    ├── ${sampleA_id}.molecule_info.h5
-    ├── ${sampleA_id}.raw_feature_bc_matrix.h5
-    ├── ${sampleA_id}.cellbender_report.html
-    ├── ${sampleA_id}.cellbender_metrics.csv
-    ├── ${sampleA_id}.cellbender_filtered.h5
-    ├── ${sampleA_id}.cellbender_ckpt.tar.gz
-    ├── ${sampleA_id}.cellbender_cell_barcodes.csv
-    ├── ${sampleA_id}.cellbender.pdf
-    ├── ${sampleA_id}.cellbender.log
-    ├── ${sampleA_id}.cellbender.h5
-    ├── ${sampleA_id}.cellbend_posterior.h5
-    ├── ${sampleA_id}.adata_object.h5ad
-    ├── ${sampleB_id}.filtered_feature_bc_matrix.h5
-    ├── ${sampleB_id}.metrics_summary.csv
-    ├── ${sampleB_id}.molecule_info.h5
-    ├── ${sampleB_id}.raw_feature_bc_matrix.h5
-    ├── ${sampleB_id}.cellbender_report.html
-    ├── ${sampleB_id}.cellbender_metrics.csv
-    ├── ${sampleB_id}.cellbender_filtered.h5
-    ├── ${sampleB_id}.cellbender_ckpt.tar.gz
-    ├── ${sampleB_id}.cellbender_cell_barcodes.csv
-    ├── ${sampleB_id}.cellbender.pdf
-    ├── ${sampleB_id}.cellbender.log
-    ├── ${sampleB_id}.cellbender.h5
-    ├── ${sampleB_id}.cellbend_posterior.h5
-    ├── ${sampleB_id}.adata_object.h5ad
-    ├── ...
-    ├── ${sampleN_id}.filtered_feature_bc_matrix.h5
-    ├── ${sampleN_id}.metrics_summary.csv
-    ├── ${sampleN_id}.molecule_info.h5
-    ├── ${sampleN_id}.raw_feature_bc_matrix.h5
-    ├── ${sampleN_id}.cellbender_report.html
-    ├── ${sampleN_id}.cellbender_metrics.csv
-    ├── ${sampleN_id}.cellbender_filtered.h5
-    ├── ${sampleN_id}.cellbender_ckpt.tar.gz
-    ├── ${sampleN_id}.cellbender_cell_barcodes.csv
-    ├── ${sampleN_id}.cellbender.pdf
-    ├── ${sampleN_id}.cellbender.log
-    ├── ${sampleN_id}.cellbender.h5
-    ├── ${sampleN_id}.cellbend_posterior.h5
-    ├── ${sampleN_id}.adata_object.h5ad
-    └── MANIFEST.tsv
+└── pmdbs_sc_rnaseq
+    ├── cohort_analysis
+    │   ├── ${cohort_id}.sample_list.tsv
+    │   ├── ${cohort_id}.merged_adata_object.h5ad
+    │   ├── ${cohort_id}.initial_metadata.csv
+    │   ├── ${cohort_id}.doublet_score.violin.png
+    │   ├── ${cohort_id}.n_genes_by_counts.violin.png
+    │   ├── ${cohort_id}.pct_counts_mt.violin.png
+    │   ├── ${cohort_id}.pct_counts_rb.violin.png
+    │   ├── ${cohort_id}.total_counts.violin.png
+    │   ├── ${cohort_id}.all_genes.csv
+    │   ├── ${cohort_id}.hvg_genes.csv
+    │   ├── ${cohort_id}.final_validation_metrics.csv
+    │   ├── ${cohort_id}_scvi_model.tar.gz
+    │   ├── ${cohort_id}.cell_types.csv
+    │   ├── ${cohort_id}.final_adata.h5ad
+    │   ├── ${cohort_id}.final_metadata.csv
+    │   ├── ${cohort_id}.scib_report.csv
+    │   ├── ${cohort_id}.scib_results.svg
+    │   ├── ${cohort_id}.features.umap.png
+    │   ├── ${cohort_id}.groups.umap.png
+    │   └── MANIFEST.tsv
+    └── preprocess
+        ├── ${sampleA_id}.filtered_feature_bc_matrix.h5
+        ├── ${sampleA_id}.metrics_summary.csv
+        ├── ${sampleA_id}.molecule_info.h5
+        ├── ${sampleA_id}.raw_feature_bc_matrix.h5
+        ├── ${sampleA_id}.cellbender_report.html
+        ├── ${sampleA_id}.cellbender_metrics.csv
+        ├── ${sampleA_id}.cellbender_filtered.h5
+        ├── ${sampleA_id}.cellbender_ckpt.tar.gz
+        ├── ${sampleA_id}.cellbender_cell_barcodes.csv
+        ├── ${sampleA_id}.cellbender.pdf
+        ├── ${sampleA_id}.cellbender.log
+        ├── ${sampleA_id}.cellbender.h5
+        ├── ${sampleA_id}.cellbend_posterior.h5
+        ├── ${sampleA_id}.adata_object.h5ad
+        ├── ${sampleB_id}.filtered_feature_bc_matrix.h5
+        ├── ${sampleB_id}.metrics_summary.csv
+        ├── ${sampleB_id}.molecule_info.h5
+        ├── ${sampleB_id}.raw_feature_bc_matrix.h5
+        ├── ${sampleB_id}.cellbender_report.html
+        ├── ${sampleB_id}.cellbender_metrics.csv
+        ├── ${sampleB_id}.cellbender_filtered.h5
+        ├── ${sampleB_id}.cellbender_ckpt.tar.gz
+        ├── ${sampleB_id}.cellbender_cell_barcodes.csv
+        ├── ${sampleB_id}.cellbender.pdf
+        ├── ${sampleB_id}.cellbender.log
+        ├── ${sampleB_id}.cellbender.h5
+        ├── ${sampleB_id}.cellbend_posterior.h5
+        ├── ${sampleB_id}.adata_object.h5ad
+        ├── ...
+        ├── ${sampleN_id}.filtered_feature_bc_matrix.h5
+        ├── ${sampleN_id}.metrics_summary.csv
+        ├── ${sampleN_id}.molecule_info.h5
+        ├── ${sampleN_id}.raw_feature_bc_matrix.h5
+        ├── ${sampleN_id}.cellbender_report.html
+        ├── ${sampleN_id}.cellbender_metrics.csv
+        ├── ${sampleN_id}.cellbender_filtered.h5
+        ├── ${sampleN_id}.cellbender_ckpt.tar.gz
+        ├── ${sampleN_id}.cellbender_cell_barcodes.csv
+        ├── ${sampleN_id}.cellbender.pdf
+        ├── ${sampleN_id}.cellbender.log
+        ├── ${sampleN_id}.cellbender.h5
+        ├── ${sampleN_id}.cellbend_posterior.h5
+        ├── ${sampleN_id}.adata_object.h5ad
+        └── MANIFEST.tsv
 ```
 
 ## Promoting staging data
