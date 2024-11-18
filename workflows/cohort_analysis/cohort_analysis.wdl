@@ -125,7 +125,7 @@ workflow cohort_analysis {
 		input:
 			output_file_paths = preprocessing_output_file_paths,
 			staging_data_buckets = staging_data_buckets,
-			staging_data_path = "preprocess",
+			staging_data_path = "~{workflow_name}/preprocess",
 			billing_project = billing_project,
 			zones = zones
 	}
@@ -164,7 +164,7 @@ workflow cohort_analysis {
 		input:
 			output_file_paths = cohort_analysis_final_output_paths,
 			staging_data_buckets = staging_data_buckets,
-			staging_data_path = sub_workflow_name,
+			staging_data_path = "~{workflow_name}/sub_workflow_name",
 			billing_project = billing_project,
 			zones = zones
 	}
