@@ -109,7 +109,7 @@ workflow pmdbs_sc_rnaseq_analysis {
 	}
 
 	if (run_cross_team_cohort_analysis) {
-		String cohort_raw_data_path_prefix = "~{cohort_raw_data_bucket}/~{workflow_execution_path}"
+		String cohort_raw_data_path_prefix = "~{cohort_raw_data_bucket}/~{workflow_execution_path}/~{workflow_name}"
 
 		call CohortAnalysis.cohort_analysis as cross_team_cohort_analysis {
 			input:
