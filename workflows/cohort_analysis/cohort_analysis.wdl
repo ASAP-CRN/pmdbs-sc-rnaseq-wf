@@ -374,7 +374,7 @@ task integrate_harmony_and_artifact_metrics {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(cell_annotated_adata_object, "GB") * 20 + 20)
+	Int mem_gb = ceil(size(cell_annotated_adata_object, "GB") * 30 + 20)
 	Int disk_size = ceil(size(cell_annotated_adata_object, "GB") * 4 + 20)
 
 	command <<<
