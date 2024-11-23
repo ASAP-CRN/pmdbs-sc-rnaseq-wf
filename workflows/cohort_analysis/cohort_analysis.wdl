@@ -414,7 +414,7 @@ task integrate_harmony_and_artifact_metrics {
 
 	runtime {
 		docker: "~{container_registry}/scvi:1.1.0_2"
-		cpu: 16
+		cpu: 48
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
