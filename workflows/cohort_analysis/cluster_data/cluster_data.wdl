@@ -109,7 +109,7 @@ task integrate_sample_data {
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_2"
+		docker: "~{container_registry}/scvi:1.2.0_1"
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -151,7 +151,7 @@ task cluster_cells {
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_2"
+		docker: "~{container_registry}/scvi:1.2.0_1"
 		cpu: 16
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -206,7 +206,7 @@ task annotate_cells {
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi:1.1.0_2"
+		docker: "~{container_registry}/scvi:1.2.0_1"
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
