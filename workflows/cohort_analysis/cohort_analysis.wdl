@@ -380,6 +380,8 @@ task integrate_harmony_and_artifact_metrics {
 	command <<<
 		set -euo pipefail
 
+		nvidia-smi
+
 		python3 /opt/scripts/main/add_harmony.py \
 			--batch-key ~{batch_key} \
 			--adata-input ~{cell_annotated_adata_object} \
