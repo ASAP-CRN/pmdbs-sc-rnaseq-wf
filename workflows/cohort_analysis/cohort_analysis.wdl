@@ -374,7 +374,7 @@ task integrate_harmony_and_artifact_metrics {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(cell_annotated_adata_object, "GB") * 30 + 20)
+	Int mem_gb = ceil(size(cell_annotated_adata_object, "GB") * 8 + 20)
 	Int disk_size = ceil(size(cell_annotated_adata_object, "GB") * 4 + 20)
 
 	command <<<
@@ -414,14 +414,14 @@ task integrate_harmony_and_artifact_metrics {
 
 	runtime {
 		docker: "~{container_registry}/scvi:1.1.0_2"
-		cpu: 48
+		cpu: 16
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
 		bootDiskSizeGb: 40
 		zones: zones
 		gpuType: "nvidia-tesla-t4"
-		gpuCount: 1
+		gpuCount: 2
 		nvidiaDriverVersion: "545.23.08" #!UnknownRuntimeKey
 	}
 }
