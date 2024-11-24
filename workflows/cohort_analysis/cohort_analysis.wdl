@@ -420,8 +420,8 @@ task integrate_harmony_and_artifact_metrics {
 		preemptible: 3
 		bootDiskSizeGb: 40
 		zones: zones
-		gpuType: "nvidia-tesla-t4"
-		gpuCount: 2
+		gpuType: "nvidia-tesla-v100"
+		gpuCount: 4
 		nvidiaDriverVersion: "545.23.08" #!UnknownRuntimeKey
 	}
 }
