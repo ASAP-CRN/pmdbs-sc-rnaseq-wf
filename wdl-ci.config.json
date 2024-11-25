@@ -7,7 +7,7 @@
       "tasks": {
         "merge_and_plot_qc_metrics": {
           "key": "merge_and_plot_qc_metrics",
-          "digest": "t2d3pgajkxeietir2rre32d3cdebvf4d",
+          "digest": "tqz5pazvvo4uqihr7sqwp7oyorcg7s4u",
           "tests": [
             {
               "inputs": {
@@ -73,7 +73,7 @@
         },
         "filter_and_normalize": {
           "key": "filter_and_normalize",
-          "digest": "gjazv7v6hzavuc4vifhnmitvjbiym36s",
+          "digest": "v4wbm23sri5lqklp2qyjtrzdiahvs7tl",
           "tests": [
             {
               "inputs": {
@@ -232,7 +232,7 @@
       "tasks": {
         "integrate_sample_data": {
           "key": "integrate_sample_data",
-          "digest": "tqsnb7bkna4n2nwmvbqulz6dogsh6ud6",
+          "digest": "kuwz23earbcufnakk3wl7kz7w7d4m55g",
           "tests": [
             {
               "inputs": {
@@ -267,7 +267,7 @@
         },
         "cluster_cells": {
           "key": "cluster_cells",
-          "digest": "lfv5vcl4vgtr72ijcy6tlivakqe4mwf2",
+          "digest": "lhwgsaecfal4ozmbrqkjw7zreqmdd7lm",
           "tests": [
             {
               "inputs": {
@@ -291,7 +291,7 @@
         },
         "annotate_cells": {
           "key": "annotate_cells",
-          "digest": "ip2oywlu4ftrpmu6vgus4vxvegr3lzw6",
+          "digest": "mlvboabgx3cbaxls63kphawphzlvzdy2",
           "tests": [
             {
               "inputs": {
