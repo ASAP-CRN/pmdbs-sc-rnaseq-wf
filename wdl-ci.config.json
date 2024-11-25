@@ -137,7 +137,7 @@
         },
         "plot_groups_and_features": {
           "key": "plot_groups_and_features",
-          "digest": "qjpvnvq4efu6ooan4qaonq7selcuopdu",
+          "digest": "bh2cfed7vxadnkpijndn4b5dtsei6twi",
           "tests": [
             {
               "inputs": {
@@ -172,7 +172,7 @@
         },
         "integrate_harmony_and_artifact_metrics": {
           "key": "integrate_harmony_and_artifact_metrics",
-          "digest": "rjabab4aldma4p4d6qn6at2rmvfn5mbp",
+          "digest": "oc3impib7i3ntwhbqsomuovqudwjf4qi",
           "tests": [
             {
               "inputs": {
@@ -475,7 +475,7 @@
         },
         "counts_to_adata": {
           "key": "counts_to_adata",
-          "digest": "mbwqmtr5ubi6v425jtdddfkjeifr4pkn",
+          "digest": "ye6a4g74qet4cjwvma2lkpyw4xvdvko7",
           "tests": [
             {
               "inputs": {
