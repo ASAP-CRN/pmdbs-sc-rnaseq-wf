@@ -17,12 +17,14 @@ def faiss_hnsw_nn(X: np.ndarray, k: int):
     See https://github.com/nmslib/hnswlib/blob/master/ALGO_PARAMS.md
     for index param details.
     """
+    print(f"Number of GPUs detected: [{faiss.get_num_gpus()}]")
     X = np.ascontiguousarray(X, dtype=np.float32)
     res = faiss.StandardGpuResources()
     M = 32
     index = faiss.IndexHNSWFlat(X.shape[1], M, faiss.METRIC_L2)
     gpu_index = faiss.index_cpu_to_gpu(res, 0, index)
     gpu_index.add(X)
+    print(f"Number of vectors in index: [{gpu_index.ntotal}]")
     distances, indices = gpu_index.search(X, k)
     del index
     del gpu_index
@@ -34,8 +36,9 @@ def faiss_brute_force_nn(X: np.ndarray, k: int):
     """Gpu brute force nearest neighbor search using faiss."""
     print(f"Number of GPUs detected: [{faiss.get_num_gpus()}]")
     X = np.ascontiguousarray(X, dtype=np.float32)
+    res = faiss.StandardGpuResources()
     index = faiss.IndexFlatL2(X.shape[1])
-    gpu_index = faiss.index_cpu_to_all_gpus(index)
+    gpu_index = faiss.index_cpu_to_gpu(res, 0, index)
     gpu_index.add(X)
     print(f"Number of vectors in index: [{gpu_index.ntotal}]")
     distances, indices = gpu_index.search(X, k)
