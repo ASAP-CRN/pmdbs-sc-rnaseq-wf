@@ -172,7 +172,7 @@
         },
         "integrate_harmony": {
           "key": "integrate_harmony",
-          "digest": "",
+          "digest": "qiizvox3qnj5jqpulxvgoltfo5dthndd",
           "tests": [
             {
               "inputs": {
@@ -208,7 +208,7 @@
         },
         "artifact_metrics": {
           "key": "artifact_metrics",
-          "digest": "",
+          "digest": "itacurm7rsdcwinn64vnfwz5plaxykqz",
           "tests": [
             {
               "inputs": {
