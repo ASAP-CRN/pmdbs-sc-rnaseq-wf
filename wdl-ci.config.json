@@ -172,7 +172,7 @@
         },
         "integrate_harmony_and_artifact_metrics": {
           "key": "integrate_harmony_and_artifact_metrics",
-          "digest": "oc3impib7i3ntwhbqsomuovqudwjf4qi",
+          "digest": "rp62i25tsofm57zyrpnmo73pdbbp7od2",
           "tests": [
             {
               "inputs": {
