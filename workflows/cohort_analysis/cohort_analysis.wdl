@@ -15,6 +15,8 @@ workflow cohort_analysis {
 		# If provided, these files will be uploaded to the staging bucket alongside other intermediate files made by this workflow
 		Array[String] preprocessing_output_file_paths = []
 
+		Boolean project_cohort_analysis
+
 		Int n_top_genes
 
 		String scvi_latent_key
@@ -95,12 +97,11 @@ workflow cohort_analysis {
 			zones = zones
 	}
 
-	call integrate_harmony_and_artifact_metrics {
+	call integrate_harmony {
 		input:
 			cohort_id = cohort_id,
 			cell_annotated_adata_object = cluster_data.cell_annotated_adata_object,
 			batch_key = batch_key,
-			label_key = label_key,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -108,10 +109,25 @@ workflow cohort_analysis {
 			zones = zones
 	}
 
+	if (project_cohort_analysis) {
+		call artifact_metrics {
+			input:
+				cohort_id = cohort_id,
+				final_adata_object = integrate_harmony.final_adata_object, #!FileCoercion
+				batch_key = batch_key,
+				label_key = label_key,
+				raw_data_path = raw_data_path,
+				workflow_info = workflow_info,
+				billing_project = billing_project,
+				container_registry = container_registry,
+				zones = zones
+		}
+	}
+
 	call plot_groups_and_features {
 		input:
 			cohort_id = cohort_id,
-			final_adata_object = integrate_harmony_and_artifact_metrics.final_adata_object, #!FileCoercion
+			final_adata_object = integrate_harmony.final_adata_object, #!FileCoercion
 			groups = groups,
 			features = features,
 			raw_data_path = raw_data_path,
@@ -149,11 +165,13 @@ workflow cohort_analysis {
 			cluster_data.cell_types_csv
 		],
 		[
-			integrate_harmony_and_artifact_metrics.final_adata_object,
-			integrate_harmony_and_artifact_metrics.final_metadata_csv,
-			integrate_harmony_and_artifact_metrics.scib_report_results_csv,
-			integrate_harmony_and_artifact_metrics.scib_report_results_svg
+			integrate_harmony.final_adata_object,
+			integrate_harmony.final_metadata_csv,
 		],
+		select_all([
+			artifact_metrics.scib_report_results_csv,
+			artifact_metrics.scib_report_results_svg
+		]),
 		[
 			plot_groups_and_features.groups_umap_plot_png,
 			plot_groups_and_features.features_umap_plot_png
@@ -189,11 +207,13 @@ workflow cohort_analysis {
 		File cell_annotated_adata_object = cluster_data.cell_annotated_adata_object
 		File cell_types_csv = cluster_data.cell_types_csv
 
-		# PCA and Harmony integrated adata objects and artifact metrics
-		File final_adata_object = integrate_harmony_and_artifact_metrics.final_adata_object #!FileCoercion
-		File final_metadata_csv = integrate_harmony_and_artifact_metrics.final_metadata_csv #!FileCoercion
-		File scib_report_results_csv = integrate_harmony_and_artifact_metrics.scib_report_results_csv #!FileCoercion
-		File scib_report_results_svg = integrate_harmony_and_artifact_metrics.scib_report_results_svg #!FileCoercion
+		# PCA and Harmony integrated adata objects
+		File final_adata_object = integrate_harmony.final_adata_object #!FileCoercion
+		File final_metadata_csv = integrate_harmony.final_metadata_csv #!FileCoercion
+
+		# Artifact metrics
+		File? scib_report_results_csv = artifact_metrics.scib_report_results_csv #!FileCoercion
+		File? scib_report_results_svg = artifact_metrics.scib_report_results_svg #!FileCoercion
 
 		# Groups and features plots
 		File groups_umap_plot_png = plot_groups_and_features.groups_umap_plot_png #!FileCoercion
@@ -359,13 +379,12 @@ task filter_and_normalize {
 	}
 }
 
-task integrate_harmony_and_artifact_metrics {
+task integrate_harmony {
 	input {
 		String cohort_id
 		File cell_annotated_adata_object
 
 		String batch_key
-		String label_key
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -388,10 +407,60 @@ task integrate_harmony_and_artifact_metrics {
 			--adata-output ~{cohort_id}.final_adata.h5ad \
 			--output-metadata-file ~{cohort_id}.final_metadata.csv
 
+		upload_outputs \
+			-b ~{billing_project} \
+			-d ~{raw_data_path} \
+			-i ~{write_tsv(workflow_info)} \
+			-o "~{cohort_id}.final_adata.h5ad" \
+			-o "~{cohort_id}.final_metadata.csv"
+	>>>
+
+	output {
+		String final_adata_object = "~{raw_data_path}/~{cohort_id}.final_adata.h5ad"
+		String final_metadata_csv = "~{raw_data_path}/~{cohort_id}.final_metadata.csv"
+	}
+
+	runtime {
+		docker: "~{container_registry}/scvi:1.2.0_1"
+		cpu: 8
+		memory: "~{mem_gb} GB"
+		disks: "local-disk ~{disk_size} HDD"
+		preemptible: 3
+		bootDiskSizeGb: 40
+		zones: zones
+		gpuType: "nvidia-tesla-t4"
+		gpuCount: 1
+		nvidiaDriverVersion: "545.23.08" #!UnknownRuntimeKey
+	}
+}
+
+task artifact_metrics {
+	input {
+		String cohort_id
+		File final_adata_object
+
+		String batch_key
+		String label_key
+
+		String raw_data_path
+		Array[Array[String]] workflow_info
+		String billing_project
+		String container_registry
+		String zones
+	}
+
+	Int mem_gb = ceil(size(final_adata_object, "GB") * 8 + 20)
+	Int disk_size = ceil(size(final_adata_object, "GB") * 4 + 20)
+
+	command <<<
+		set -euo pipefail
+
+		nvidia-smi
+
 		python3 /opt/scripts/main/artifact_metrics.py \
 			--batch-key ~{batch_key} \
 			--label-key ~{label_key} \
-			--adata-input ~{cohort_id}.final_adata.h5ad \
+			--adata-input ~{final_adata_object} \
 			--output-report-dir scib_report_dir
 
 		mv "scib_report_dir/scib_report.csv" "scib_report_dir/~{cohort_id}.scib_report.csv"
@@ -401,15 +470,11 @@ task integrate_harmony_and_artifact_metrics {
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{cohort_id}.final_adata.h5ad" \
-			-o "~{cohort_id}.final_metadata.csv" \
 			-o "scib_report_dir/~{cohort_id}.scib_report.csv" \
 			-o "scib_report_dir/~{cohort_id}.scib_results.svg"
 	>>>
 
 	output {
-		String final_adata_object = "~{raw_data_path}/~{cohort_id}.final_adata.h5ad"
-		String final_metadata_csv = "~{raw_data_path}/~{cohort_id}.final_metadata.csv"
 		String scib_report_results_csv = "~{raw_data_path}/~{cohort_id}.scib_report.csv"
 		String scib_report_results_svg = "~{raw_data_path}/~{cohort_id}.scib_results.svg"
 	}
