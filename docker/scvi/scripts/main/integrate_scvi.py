@@ -4,6 +4,19 @@ import scvi
 import anndata as ad
 
 
+def integrate_with_scanvi(          
+    adata: ad.AnnData, batch_key: str, latent_key: str
+) -> tuple[ad.AnnData, scvi.model.SCANVI]:
+    """
+    fit scANVI model to AnnData object
+    """
+     # 4. get scANVI model
+    model = scvi.model.SCANVI.load(args.output_scvi_dir)
+    # 5. get the latent space
+    adata.obsm[args.latent_key] = model.get_latent_representation()  # type: ignore
+
+
+
 def integrate_with_scvi(
     adata: ad.AnnData, batch_key: str, latent_key: str
 ) -> tuple[ad.AnnData, scvi.model.SCVI]:
@@ -71,6 +84,12 @@ def main(args: argparse.Namespace):
     # 3. save the integrated adata and scvi model
     model.save(args.output_scvi_dir, overwrite=True)
     adata.write_h5ad(filename=args.adata_output, compression="gzip")
+
+    # 4. get scANVI model
+    adata, model = integrate_with_scanvi(adata, args.batch_key, args.latent_key)
+    # 5. save the latent space
+    adata.write_h5ad(filename=args.adata_output, compression="gzip")
+
 
 
 if __name__ == "__main__":
