@@ -31,7 +31,7 @@ def label_with_scanvi(
 
     scanvi_model = scvi.model.SCANVI.from_scvi_model(
         model,
-        adata=filtered_adata,
+        adata=adata,
         labels_key="cell_type",
         unlabeled_category="Unknown"
         )
