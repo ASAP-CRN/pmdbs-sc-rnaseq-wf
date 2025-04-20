@@ -31,6 +31,7 @@
 
 - _transcriptional-phenotype_:  cell transcritional phenotype [`transcriptional_phenotype.py`](./main/transcriptional_phenotype.py)
     - assign 'cell_type' to high-fidelity mappings (i.e. correlation >0.5 and bootstrap_probability>0.5), all else "unknown" to the high level labels.
+    - annotate adata & export full celltypes
 
 - _integration_: [`integrate_scvi.py`](./main/integrate_scvi.py)
     - `scVI` integration to remove batch effects (minimize non-biological variability)

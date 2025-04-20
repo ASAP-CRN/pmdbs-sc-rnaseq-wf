@@ -9,8 +9,6 @@ from anndata import AnnData
 sys.path.append("/opt/scripts/utility")
 from helpers import update_validation_metrics
 
-
-from cell_type_mapper.cli.map_to_on_the_fly_markers import OnTheFlyMapper
 from pathlib import Path
 import os
 
@@ -31,14 +29,6 @@ if not TMP_DIR.exists():
     TMP_DIR.mkdir()
 
 
-# if mac
-if os.uname().system == "Darwin":
-    ASAP_DATA = (
-        HOME
-        / "Projects/ASAP/data/asap-curated-cohort-pmdbs-sc-rnaseq/pmdbs_sc_rnaseq/cohort_analysis"
-    )
-else:
-    ASAP_DATA = HOME / "Projects/ASAP/harmonized-wf-dev/data/cohort_analysis"
 
 CHUNK_SIZE = 40000
 N_RUNNERS_UP = 5
@@ -152,15 +142,6 @@ if __name__ == "__main__":
         type=str,
         help="AnnData object for a dataset",
     )
-
-    parser.add_argument(
-        "--mmc-results",
-        dest="mmc_results",
-        type=str,
-        help="Path to MMC result CSV",
-        default=f"{RESULTS_DIR / CSV_RESULTS}"
-    )
-    
     parser.add_argument(
         "--output-cell-types-file",
         dest="cell_type_output",
@@ -173,5 +154,13 @@ if __name__ == "__main__":
         type=str,
         help="Output file to save AnnData object to",
     )
+    parser.add_argument(
+        "--mmc-results",
+        dest="mmc_results",
+        type=str,
+        help="Path to MMC result CSV",
+        default=f"{RESULTS_DIR / CSV_RESULTS}"
+    )
+    
     args = parser.parse_args()
     main(args)

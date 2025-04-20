@@ -12,9 +12,9 @@ os.environ["AIBS_BKP_USE_TORCH"] = "false"
 # os.environ["OMP_NUM_THREADS"] = "1"
 
 HOME = Path.home()
-TMP_DIR = HOME / "tmp"
-if not TMP_DIR.exists():
-    TMP_DIR.mkdir()
+# TMP_DIR = HOME / "tmp"
+# if not TMP_DIR.exists():
+#     TMP_DIR.mkdir()
 
 # these wer some initial defaults
 CHUNK_SIZE = 40000
@@ -30,7 +30,7 @@ MAX_GB = 48.0
 # can also use this: !pip install -U git+https://github.com/alleninstitute/abc_atlas_access >& data/scratch/junk.txt
 
 PRECOMPUTED_STATS = (
-    f"examples/data/abc_atlas_data/precomputed_stats.20231120.sea_ad.MTG.h5"
+    f"{HOME}/Projects/ABC/cell_type_mapper/examples/data/abc_atlas_data/precomputed_stats.20231120.sea_ad.MTG.h5"
 )
 
 
@@ -42,9 +42,16 @@ def main(args: argparse.Namespace):
     """
 
     # not sure if we should use a tmp dir or not.
-    tmp_dir = TMP_DIR 
-    if not tmp_dir.exists():
-        tmp_dir.mkdir()
+    # tmp_dir = TMP_DIR 
+    # if not tmp_dir.exists():
+    #     tmp_dir.mkdir()
+
+    # tmp_dir = Path(args.mmc_out_path)
+    # tmp_dir = Path.cwd() 
+    # if not tmp_dir.exists():
+    #     tmp_dir.mkdir()
+
+    tmp_dir = Path.cwd()
 
     REFERENCE = "SEAAD"
 
@@ -54,12 +61,16 @@ def main(args: argparse.Namespace):
     LOG_FILE = f"{file_root}.mmc.{REFERENCE}_log.txt"
     CSV_RESULTS = f"{file_root}.mmc.{REFERENCE}_results.csv"
 
+    print(f"tmp_dir: {tmp_dir}")
+    print(f"EXTENDED_RESULTS: {EXTENDED_RESULTS}")
+    print(f"LOG_FILE: {LOG_FILE}")
+    print(f"CSV_RESULTS: {CSV_RESULTS}")
 
     # MMC
     config = {
         # "query_path": f"{ASAP_DATA}/{FILE_ROOT}.h5ad",
         "query_path": args.adata_input,
-        "tmp_dir": f"{TMP_DIR}",
+        "tmp_dir": f"{tmp_dir}",
         "extended_result_path": f"{tmp_dir / EXTENDED_RESULTS}",
         "csv_result_path": f"{tmp_dir / CSV_RESULTS}",
         "log_path": f"{tmp_dir / LOG_FILE}",
@@ -95,7 +106,6 @@ if __name__ == "__main__":
         type=str,
         help="AnnData object for a dataset",
     )
-
     parser.add_argument(
         "--mmc-taxonomy-path",
         dest="mmc_taxonomy_path",
@@ -103,14 +113,18 @@ if __name__ == "__main__":
         help="Path to MMC taxonomy files",
         default=f"{PRECOMPUTED_STATS}"
     )
- 
     parser.add_argument(
         "--output-name",
         dest="result_name",
         type=str,
         help="Output files to write results to",
     )
-
+    # parser.add_argument(
+    #     "--mmc-results",
+    #     dest="mmc_results",
+    #     type=str,
+    #     help="Output path",
+    # )
     args = parser.parse_args()
     main(args)
 
