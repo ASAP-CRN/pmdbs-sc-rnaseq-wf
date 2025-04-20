@@ -108,7 +108,7 @@ if __name__ == "__main__":
         "--label-key",
         dest="label_key",
         type=str,
-        default="cell_type",
+        default="C_scANVI",
         help="key to reference our 'cell_type' labels",
     )
     parser.add_argument(
