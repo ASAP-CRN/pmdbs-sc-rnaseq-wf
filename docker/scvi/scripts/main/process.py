@@ -107,12 +107,12 @@ def main(args: argparse.Namespace):
     full_features.to_csv(args.full_gene_file, index=True)
     hvg_features.to_csv(args.hvg_file, index=True)
 
-    # 4. update the validation metrics
-    #######  validation metrics
-    val_metrics = pd.read_csv(args.output_validation_file, index_col=0)
-    output_metrics = update_validation_metrics(adata, "filter", val_metrics)
-    # log the validation metrics
-    output_metrics.to_csv(args.output_validation_file, index=True)
+    # # 4. update the validation metrics
+    # #######  validation metrics
+    # val_metrics = pd.read_csv(args.output_validation_file, index_col=0)
+    # output_metrics = update_validation_metrics(adata, "filter", val_metrics)
+    # # log the validation metrics
+    # output_metrics.to_csv(args.output_validation_file, index=True)
 
 
 if __name__ == "__main__":
@@ -166,12 +166,6 @@ if __name__ == "__main__":
         help="Output file to save hvg metadata (full genes)",
     )
 
-    parser.add_argument(
-        "--output-validation-file",
-        dest="output_validation_file",
-        type=str,
-        help="Output file to write validation metrics to",
-    )
 
     args = parser.parse_args()
     main(args)

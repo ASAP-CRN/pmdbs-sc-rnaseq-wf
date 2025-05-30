@@ -13,49 +13,49 @@ from pathlib import Path
 import os
 
 
-os.environ["AIBS_BKP_USE_TORCH"] = "false"
+# os.environ["AIBS_BKP_USE_TORCH"] = "false"
 
-# os.environ["NUMEXPR_NUM_THREADS"] = "1"
-# os.environ["MKL_NUM_THREADS"] = "1"
-# os.environ["OMP_NUM_THREADS"] = "1"
+# # os.environ["NUMEXPR_NUM_THREADS"] = "1"
+# # os.environ["MKL_NUM_THREADS"] = "1"
+# # os.environ["OMP_NUM_THREADS"] = "1"
 
-HOME = Path.home()
+# HOME = Path.home()
 
-ROOT = HOME / "Projects/ASAP/cell_type_mapper"
-
-
-TMP_DIR = ROOT / "tmp"
-if not TMP_DIR.exists():
-    TMP_DIR.mkdir()
+# ROOT = HOME / "Projects/ASAP/cell_type_mapper"
 
 
-
-CHUNK_SIZE = 40000
-N_RUNNERS_UP = 5
-RNG_SEED = 11235813
-N_PROCESSORS = 8
-MAX_GB = 48.0
+# TMP_DIR = ROOT / "tmp"
+# if not TMP_DIR.exists():
+#     TMP_DIR.mkdir()
 
 
-#
-FILE_ROOT = "asap-cohort.merged_adata_object"
-DATE = "20250129"
+
+# CHUNK_SIZE = 40000
+# N_RUNNERS_UP = 5
+# RNG_SEED = 11235813
+# N_PROCESSORS = 8
+# MAX_GB = 48.0
 
 
-REFERENCE = "SEAAD"
-
-EXTENDED_RESULTS = f"{FILE_ROOT}.mmc.{REFERENCE}.{DATE}.json"
-LOG_FILE = f"{FILE_ROOT}.mmc.{REFERENCE}_log.{DATE}.txt"
-CSV_RESULTS = f"{FILE_ROOT}.mmc.{REFERENCE}_results.{DATE}.csv"
+# #
+# FILE_ROOT = "asap-cohort.merged_adata_object"
+# DATE = "20250129"
 
 
-RESULTS_DIR = ROOT / f"MMC.{REFERENCE}_RESULTS"
-if not RESULTS_DIR.exists():
-    RESULTS_DIR.mkdir()
+# REFERENCE = "SEAAD"
 
-PRECOMPUTED_STATS = (
-    f"examples/data/abc_atlas_data/precomputed_stats.20231120.sea_ad.MTG.h5"
-)
+# EXTENDED_RESULTS = f"{FILE_ROOT}.mmc.{REFERENCE}.{DATE}.json"
+# LOG_FILE = f"{FILE_ROOT}.mmc.{REFERENCE}_log.{DATE}.txt"
+# CSV_RESULTS = f"{FILE_ROOT}.mmc.{REFERENCE}_results.{DATE}.csv"
+
+
+# RESULTS_DIR = ROOT / f"MMC.{REFERENCE}_RESULTS"
+# if not RESULTS_DIR.exists():
+#     RESULTS_DIR.mkdir()
+
+# PRECOMPUTED_STATS = (
+#     f"examples/data/abc_atlas_data/precomputed_stats.20231120.sea_ad.MTG.h5"
+# )
 
 # load resuults.
 # results header is the first 4 lines
@@ -129,7 +129,6 @@ def main(args: argparse.Namespace):
     adata.obs = adata.obs.merge(results, left_index=True, right_index=True)
 
     # save the adata
-
     adata.write_h5ad(filename=args.adata_output, compression="gzip")
 
 
@@ -159,7 +158,6 @@ if __name__ == "__main__":
         dest="mmc_results",
         type=str,
         help="Path to MMC result CSV",
-        default=f"{RESULTS_DIR / CSV_RESULTS}"
     )
     
     args = parser.parse_args()

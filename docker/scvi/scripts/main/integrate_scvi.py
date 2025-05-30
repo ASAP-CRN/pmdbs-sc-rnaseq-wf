@@ -1,20 +1,20 @@
 import os
 import argparse
-import scvi
+import scvi.model as scvi_model
 import anndata as ad
 
 
 SCANVI_LATENT_KEY = "X_scANVI"
+SCVI_LATENT_KEY = "X_scVI"
+
 SCANVI_PREDICTIONS_KEY = "C_scANVI"
 
 
-def label_with_scanvi(          
-    adata: ad.AnnData, batch_key: str, scanvi_latent_key: str
-) -> tuple[ad.AnnData, scvi.model.SCANVI]:
+def label_with_scanvi(adata: ad.AnnData, model: scvi_model.SCVI ) -> tuple[ad.AnnData, scvi_model.SCANVI]:
     """
     fit scANVI model to AnnData object
     """
-    scanvi_epochs = 200
+    scanvi_epochs = 300
     batch_size = 1024
     accelerator = "gpu"
     dispersion = "gene-cell"  # "gene"
@@ -23,13 +23,8 @@ def label_with_scanvi(
     early_stopping = True
     early_stopping_patience = 20
 
-     # 4. get scANVI model
-    model = scvi.model.SCANVI.load(args.output_scvi_dir)
-    # 5. get the latent space
-    adata.obsm[args.latent_key] = model.get_latent_representation()  # type: ignore
 
-
-    scanvi_model = scvi.model.SCANVI.from_scvi_model(
+    scanvi_model = scvi_model.SCANVI.from_scvi_model(
         model,
         adata=adata,
         labels_key="cell_type",
@@ -54,8 +49,8 @@ def label_with_scanvi(
 
 
 def integrate_with_scvi(
-    adata: ad.AnnData, batch_key: str, latent_key: str
-) -> tuple[ad.AnnData, scvi.model.SCVI]:
+    adata: ad.AnnData, batch_key: str,
+) -> tuple[ad.AnnData, scvi_model.SCVI]:
     """
     fit scvi model to AnnData object
     """
@@ -64,7 +59,7 @@ def integrate_with_scvi(
     n_latent = 30
     n_layers = 2
     train_size = 0.85
-    scvi_epochs = 200
+    scvi_epochs = 300
     batch_size = 1024
     accelerator = "gpu"
     dispersion = "gene-cell"  # "gene"
@@ -78,7 +73,7 @@ def integrate_with_scvi(
     # integrate the data with `scVI`
     # noise = ["doublet_score", "pct_counts_mt", "pct_counts_rb"]
     categorical_covariate_keys = None
-    scvi.model.SCVI.setup_anndata(
+    scvi_model.SCVI.setup_anndata(
         adata,
         layer="counts",
         batch_key=batch_key,
@@ -86,7 +81,7 @@ def integrate_with_scvi(
         # categorical_covariate_keys=categorical_covariate_keys,
     )
 
-    model = scvi.model.SCVI(
+    model = scvi_model.SCVI(
         adata,
         n_layers=n_layers,
         n_latent=n_latent,
@@ -104,7 +99,7 @@ def integrate_with_scvi(
         # plan_kwargs=plan_kwargs,
     )
 
-    adata.obsm[latent_key] = model.get_latent_representation()  # type: ignore
+    adata.obsm[SCVI_LATENT_KEY] = model.get_latent_representation()  # type: ignore
 
     return (adata, model)
 
@@ -117,21 +112,25 @@ def main(args: argparse.Namespace):
     # 0. load data
     adata = ad.read_h5ad(args.adata_input)  # type: ignore
     # 2. process data
-    adata, model = integrate_with_scvi(adata, args.batch_key, args.latent_key)
+    adata, model = integrate_with_scvi(adata, args.batch_key)
     # 3. save the integrated adata and scvi model
     model.save(args.output_scvi_dir, overwrite=True)
     adata.write_h5ad(filename=args.adata_output, compression="gzip")
 
     # 4. get scANVI model
-    adata, scanvi_model = label_with_scanvi(adata, model, args.batch_key)
+    adata, scanvi_model = label_with_scanvi(adata, model)
     # 5. save the integrated adata and scvi model
     scanvi_model.save(args.output_scanvi_dir, overwrite=True)
    
     # 6. save the latent space
     adata.write_h5ad(filename=args.adata_output, compression="gzip")
 
-    # 7. save the cell types to feather
-    adata.obs[args.cell_type_output].to_feather(args.cell_type_output)
+    adata = ad.read_h5ad(args.adata_output)  # type: ignore
+    
+    # # 7. save the cell types to feather
+    # adata.obs[[SCANVI_PREDICTIONS_KEY]].to_feather(args.cell_type_output)
+    # 7. save the cell types to parquet
+    adata.obs[[SCANVI_PREDICTIONS_KEY]].to_parquet(args.cell_type_output)
 
 
 if __name__ == "__main__":

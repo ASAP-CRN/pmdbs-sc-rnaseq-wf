@@ -7,9 +7,9 @@ import argparse
 # works best on CPU
 os.environ["AIBS_BKP_USE_TORCH"] = "false"
 
-# os.environ["NUMEXPR_NUM_THREADS"] = "1"
-# os.environ["MKL_NUM_THREADS"] = "1"
-# os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
 
 HOME = Path.home()
 # TMP_DIR = HOME / "tmp"
@@ -30,7 +30,7 @@ MAX_GB = 48.0
 # can also use this: !pip install -U git+https://github.com/alleninstitute/abc_atlas_access >& data/scratch/junk.txt
 
 PRECOMPUTED_STATS = (
-    f"{HOME}/Projects/ABC/cell_type_mapper/examples/data/abc_atlas_data/precomputed_stats.20231120.sea_ad.MTG.h5"
+    f"/home/jupyter/workspace/ws_files/ABC/precomputed_stats.20231120.sea_ad.MTG.h5"
 )
 
 

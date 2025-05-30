@@ -6,8 +6,6 @@
 - _pre-preprocessing_: executed by wdl [`cellbender :: remove_technical_artifacts`](../../../workflows/preprocess/preprocess.wdl#L327-L350)
 - _doublet detection_ + _qc metrics_: [`prep_metadata.py`](./main/prep_metadata.py), calculates `scrublet` metrics and adds additional metrics to metadata.
 
-
- QC filtering [`filter.py`](./main/filter.py)
 - _merge and plot QC_: [`merge_and_plot_qc.py`](./main/merge_and_plot_qc.py)
     - Merges adatas.
     - plot general QC metrics for all cells
