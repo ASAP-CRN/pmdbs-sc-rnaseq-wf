@@ -17,7 +17,7 @@ from sklearn.metrics import (
     precision_recall_curve,
 )
 from scipy.special import softmax
-from scvi.external import SOLO
+# from scvi.external import SOLO
 from scvi.model import SCVI
 import umap
 
@@ -263,177 +263,177 @@ def _fill_adata_slots_automatically(adata, d):
             print("Unable to load data into AnnData: ", key, value, type(value))
 
 
-# from calico/solo repo
-def get_solo_results(
-    solo: SOLO,
-    adata: ad.AnnData,
-    vae: SCVI,
-    doublet_ratio: float | None = 0.05,
-    expected_number_of_doublets: Optional[int] = None,
-    gen_report: bool = False,
-):
-    """ """
+# # from calico/solo repo
+# def get_solo_results(
+#     solo: SOLO,
+#     adata: ad.AnnData,
+#     vae: SCVI,
+#     doublet_ratio: float | None = 0.05,
+#     expected_number_of_doublets: Optional[int] = None,
+#     gen_report: bool = False,
+# ):
+#     """ """
 
-    num_cells, num_genes = adata.shape
+#     num_cells, num_genes = adata.shape
 
-    latent = vae.get_latent_representation()
+#     latent = vae.get_latent_representation()
 
-    logit_predictions = solo.predict(include_simulated_doublets=True)
+#     logit_predictions = solo.predict(include_simulated_doublets=True)
 
-    is_doublet_known = solo.adata.obs._solo_doub_sim == "doublet"
-    is_doublet_pred = logit_predictions.idxmin(axis=1) == "singlet"
+#     is_doublet_known = solo.adata.obs._solo_doub_sim == "doublet"
+#     is_doublet_pred = logit_predictions.idxmin(axis=1) == "singlet"
 
-    validation_is_doublet_known = is_doublet_known[solo.validation_indices]
-    validation_is_doublet_pred = is_doublet_pred[solo.validation_indices]
-    training_is_doublet_known = is_doublet_known[solo.train_indices]
-    training_is_doublet_pred = is_doublet_pred[solo.train_indices]
+#     validation_is_doublet_known = is_doublet_known[solo.validation_indices]
+#     validation_is_doublet_pred = is_doublet_pred[solo.validation_indices]
+#     training_is_doublet_known = is_doublet_known[solo.train_indices]
+#     training_is_doublet_pred = is_doublet_pred[solo.train_indices]
 
-    valid_as = accuracy_score(validation_is_doublet_known, validation_is_doublet_pred)
-    valid_roc = roc_auc_score(validation_is_doublet_known, validation_is_doublet_pred)
-    valid_ap = average_precision_score(
-        validation_is_doublet_known, validation_is_doublet_pred
-    )
+#     valid_as = accuracy_score(validation_is_doublet_known, validation_is_doublet_pred)
+#     valid_roc = roc_auc_score(validation_is_doublet_known, validation_is_doublet_pred)
+#     valid_ap = average_precision_score(
+#         validation_is_doublet_known, validation_is_doublet_pred
+#     )
 
-    train_as = accuracy_score(training_is_doublet_known, training_is_doublet_pred)
-    train_roc = roc_auc_score(training_is_doublet_known, training_is_doublet_pred)
-    train_ap = average_precision_score(
-        training_is_doublet_known, training_is_doublet_pred
-    )
+#     train_as = accuracy_score(training_is_doublet_known, training_is_doublet_pred)
+#     train_roc = roc_auc_score(training_is_doublet_known, training_is_doublet_pred)
+#     train_ap = average_precision_score(
+#         training_is_doublet_known, training_is_doublet_pred
+#     )
 
-    print(f"Training results")
-    print(f"AUROC: {train_roc}, Accuracy: {train_as}, Average precision: {train_ap}")
+#     print(f"Training results")
+#     print(f"AUROC: {train_roc}, Accuracy: {train_as}, Average precision: {train_ap}")
 
-    print(f"Validation results")
-    print(f"AUROC: {valid_roc}, Accuracy: {valid_as}, Average precision: {valid_ap}")
+#     print(f"Validation results")
+#     print(f"AUROC: {valid_roc}, Accuracy: {valid_as}, Average precision: {valid_ap}")
 
-    # write predictions
-    # softmax predictions
-    softmax_predictions = pd.DataFrame(
-        softmax(logit_predictions, axis=1),
-        columns=logit_predictions.columns,
-        index=logit_predictions.index,
-    )
+#     # write predictions
+#     # softmax predictions
+#     softmax_predictions = pd.DataFrame(
+#         softmax(logit_predictions, axis=1),
+#         columns=logit_predictions.columns,
+#         index=logit_predictions.index,
+#     )
 
-    doublet_score = softmax_predictions.loc[:, "doublet"]
+#     doublet_score = softmax_predictions.loc[:, "doublet"]
 
-    # logit predictions
-    logit_doublet_score = logit_predictions.loc[:, "doublet"]
+#     # logit predictions
+#     logit_doublet_score = logit_predictions.loc[:, "doublet"]
 
-    # update threshold as a function of Solo's estimate of the number of
-    # doublets
-    # essentially a log odds update
-    # TODO put in a function
-    # currently overshrinking softmaxes
+#     # update threshold as a function of Solo's estimate of the number of
+#     # doublets
+#     # essentially a log odds update
+#     # TODO put in a function
+#     # currently overshrinking softmaxes
 
-    if doublet_ratio is None:
-        expected_number_of_doublets = None
-    else:
-        expected_number_of_doublets = int(doublet_ratio * num_cells)
+#     if doublet_ratio is None:
+#         expected_number_of_doublets = None
+#     else:
+#         expected_number_of_doublets = int(doublet_ratio * num_cells)
 
-    solo_scores = doublet_score[:num_cells]
+#     solo_scores = doublet_score[:num_cells]
 
-    if expected_number_of_doublets is not None:
-        k = len(solo_scores) - expected_number_of_doublets
-        if expected_number_of_doublets / len(solo_scores) > 0.5:
-            print(
-                """Make sure you actually expect more than half your cells
-                   to be doublets. If not change your
-                   -e parameter value"""
-            )
-        assert k > 0
-        idx = np.argpartition(solo_scores, k)
-        threshold = np.max(solo_scores[idx[:k]])
-        is_solo_doublet = solo_scores > threshold
-    else:
-        is_solo_doublet = solo_scores > 0.5
+#     if expected_number_of_doublets is not None:
+#         k = len(solo_scores) - expected_number_of_doublets
+#         if expected_number_of_doublets / len(solo_scores) > 0.5:
+#             print(
+#                 """Make sure you actually expect more than half your cells
+#                    to be doublets. If not change your
+#                    -e parameter value"""
+#             )
+#         assert k > 0
+#         idx = np.argpartition(solo_scores, k)
+#         threshold = np.max(solo_scores[idx[:k]])
+#         is_solo_doublet = solo_scores > threshold
+#     else:
+#         is_solo_doublet = solo_scores > 0.5
 
-    smoothed_preds = knn_smooth_pred_class(
-        X=latent, pred_class=is_doublet_pred[:num_cells]
-    )
+#     smoothed_preds = knn_smooth_pred_class(
+#         X=latent, pred_class=is_doublet_pred[:num_cells]
+#     )
 
-    ret_obs = adata.obs.copy()
-    ret_obs["is_doublet"] = is_solo_doublet[:num_cells].values.astype(bool)
-    ret_obs["logit_scores"] = logit_doublet_score[:num_cells].values.astype(float)
-    ret_obs["softmax_scores"] = solo_scores[:num_cells].values.astype(float)
+#     ret_obs = adata.obs.copy()
+#     ret_obs["is_doublet"] = is_solo_doublet[:num_cells].values.astype(bool)
+#     ret_obs["logit_scores"] = logit_doublet_score[:num_cells].values.astype(float)
+#     ret_obs["softmax_scores"] = solo_scores[:num_cells].values.astype(float)
 
-    ret_figs = []
-    if gen_report:
+#     ret_figs = []
+#     if gen_report:
 
-        train_solo_scores = doublet_score[solo.train_indices]
-        validation_solo_scores = doublet_score[solo.validation_indices]
+#         train_solo_scores = doublet_score[solo.train_indices]
+#         validation_solo_scores = doublet_score[solo.validation_indices]
 
-        train_fpr, train_tpr, _ = roc_curve(
-            training_is_doublet_known, train_solo_scores
-        )
-        val_fpr, val_tpr, _ = roc_curve(
-            validation_is_doublet_known, validation_solo_scores
-        )
-        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-        # plot ROC
-        ax.plot(train_fpr, train_tpr, label="Train")
-        ax.plot(val_fpr, val_tpr, label="Validation")
-        ax.set_xlabel("False positive rate")
-        ax.set_ylabel("True positive rate")
-        ax.legend()
-        # plt.savefig(os.path.join(args.out_dir, "roc.pdf"))
-        ret_figs.append(fig)
+#         train_fpr, train_tpr, _ = roc_curve(
+#             training_is_doublet_known, train_solo_scores
+#         )
+#         val_fpr, val_tpr, _ = roc_curve(
+#             validation_is_doublet_known, validation_solo_scores
+#         )
+#         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+#         # plot ROC
+#         ax.plot(train_fpr, train_tpr, label="Train")
+#         ax.plot(val_fpr, val_tpr, label="Validation")
+#         ax.set_xlabel("False positive rate")
+#         ax.set_ylabel("True positive rate")
+#         ax.legend()
+#         # plt.savefig(os.path.join(args.out_dir, "roc.pdf"))
+#         ret_figs.append(fig)
 
-        train_precision, train_recall, _ = precision_recall_curve(
-            training_is_doublet_known, train_solo_scores
-        )
-        val_precision, val_recall, _ = precision_recall_curve(
-            validation_is_doublet_known, validation_solo_scores
-        )
+#         train_precision, train_recall, _ = precision_recall_curve(
+#             training_is_doublet_known, train_solo_scores
+#         )
+#         val_precision, val_recall, _ = precision_recall_curve(
+#             validation_is_doublet_known, validation_solo_scores
+#         )
 
-        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-        # plot accuracy
-        ax.plot(train_recall, train_precision, label="Train")
-        ax.plot(val_recall, val_precision, label="Validation")
-        ax.set_xlabel("Recall")
-        ax.set_ylabel("pytPrecision")
-        ax.legend()
-        # plt.savefig(os.path.join(args.out_dir, "precision_recall.pdf"))
-        # plt.show()
-        ret_figs.append(fig)
+#         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+#         # plot accuracy
+#         ax.plot(train_recall, train_precision, label="Train")
+#         ax.plot(val_recall, val_precision, label="Validation")
+#         ax.set_xlabel("Recall")
+#         ax.set_ylabel("pytPrecision")
+#         ax.legend()
+#         # plt.savefig(os.path.join(args.out_dir, "precision_recall.pdf"))
+#         # plt.show()
+#         ret_figs.append(fig)
 
-        # plot distributions
-        obs_indices = solo.validation_indices[solo.validation_indices < num_cells]
-        sim_indices = solo.validation_indices[solo.validation_indices > num_cells]
+#         # plot distributions
+#         obs_indices = solo.validation_indices[solo.validation_indices < num_cells]
+#         sim_indices = solo.validation_indices[solo.validation_indices > num_cells]
 
-        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-        sns.displot(doublet_score[sim_indices], label="Simulated", ax=ax)
-        sns.displot(doublet_score[obs_indices], label="Observed", ax=ax)
-        ax.legend()
-        # plt.savefig(os.path.join(args.out_dir, "sim_vs_obs_dist.pdf"))
-        # plt.show()
-        ret_figs.append(fig)
+#         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+#         sns.displot(doublet_score[sim_indices], label="Simulated", ax=ax)
+#         sns.displot(doublet_score[obs_indices], label="Observed", ax=ax)
+#         ax.legend()
+#         # plt.savefig(os.path.join(args.out_dir, "sim_vs_obs_dist.pdf"))
+#         # plt.show()
+#         ret_figs.append(fig)
 
-        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-        sns.distplot(solo_scores[:num_cells], label="Observed (transformed)", ax=ax)
-        ax.legend()
-        # plt.savefig(os.path.join(args.out_dir, "real_cells_dist.pdf"))
-        # plt.show()
-        ret_figs.append(fig)
+#         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+#         sns.distplot(solo_scores[:num_cells], label="Observed (transformed)", ax=ax)
+#         ax.legend()
+#         # plt.savefig(os.path.join(args.out_dir, "real_cells_dist.pdf"))
+#         # plt.show()
+#         ret_figs.append(fig)
 
-        scvi_umap = umap.UMAP(n_neighbors=16).fit_transform(latent)
-        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-        cax = ax.scatter(
-            scvi_umap[:, 0],
-            scvi_umap[:, 1],
-            c=doublet_score[:num_cells],
-            s=8,
-            cmap="GnBu",
-        )
-        plt.colorbar(cax, ax=ax, pad=0.01, fraction=0.08, aspect=30, location="right")
-        ax.set_xlabel("UMAP 1")
-        ax.set_ylabel("UMAP 2")
-        ax.set_title("SOLO doublet_score")
-        # fig.savefig(os.path.join(args.out_dir, "umap_solo_scores.pdf"))
-        # plt.show()
-        ret_figs.append(fig)
-        return ret_obs, ret_figs
+#         scvi_umap = umap.UMAP(n_neighbors=16).fit_transform(latent)
+#         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+#         cax = ax.scatter(
+#             scvi_umap[:, 0],
+#             scvi_umap[:, 1],
+#             c=doublet_score[:num_cells],
+#             s=8,
+#             cmap="GnBu",
+#         )
+#         plt.colorbar(cax, ax=ax, pad=0.01, fraction=0.08, aspect=30, location="right")
+#         ax.set_xlabel("UMAP 1")
+#         ax.set_ylabel("UMAP 2")
+#         ax.set_title("SOLO doublet_score")
+#         # fig.savefig(os.path.join(args.out_dir, "umap_solo_scores.pdf"))
+#         # plt.show()
+#         ret_figs.append(fig)
+#         return ret_obs, ret_figs
 
-    return ret_obs
+#     return ret_obs
 
 
 # https://github.com/calico/solo/blob/master/solo/utils.py

@@ -3,49 +3,11 @@ import scanpy as sc
 import numpy as np
 from scib_metrics.benchmark import Benchmarker, BioConservation
 from scib_metrics.nearest_neighbors import NeighborsResults
-import faiss
+
 from pathlib import Path
 
 from anndata import AnnData
 from pandas import DataFrame
-
-
-# TODO: add these functions to utility/helpers.py
-def faiss_hnsw_nn(X: np.ndarray, k: int):
-    """Gpu HNSW nearest neighbor search using faiss.
-
-    See https://github.com/nmslib/hnswlib/blob/master/ALGO_PARAMS.md
-    for index param details.
-    """
-    print(f"Number of GPUs detected: [{faiss.get_num_gpus()}]")
-    X = np.ascontiguousarray(X, dtype=np.float32)
-    res = faiss.StandardGpuResources()
-    M = 32
-    index = faiss.IndexHNSWFlat(X.shape[1], M, faiss.METRIC_L2)
-    gpu_index = faiss.index_cpu_to_gpu(res, 0, index)
-    gpu_index.add(X)
-    print(f"Number of vectors in index: [{gpu_index.ntotal}]")
-    distances, indices = gpu_index.search(X, k)
-    del index
-    del gpu_index
-    # distances are squared
-    return NeighborsResults(indices=indices, distances=np.sqrt(distances))
-
-
-def faiss_brute_force_nn(X: np.ndarray, k: int):
-    """Gpu brute force nearest neighbor search using faiss."""
-    print(f"Number of GPUs detected: [{faiss.get_num_gpus()}]")
-    X = np.ascontiguousarray(X, dtype=np.float32)
-    res = faiss.StandardGpuResources()
-    index = faiss.IndexFlatL2(X.shape[1])
-    gpu_index = faiss.index_cpu_to_gpu(res, 0, index)
-    gpu_index.add(X)
-    print(f"Number of vectors in index: [{gpu_index.ntotal}]")
-    distances, indices = gpu_index.search(X, k)
-    del index
-    del gpu_index
-    # distances are squared
-    return NeighborsResults(indices=indices, distances=np.sqrt(distances))
 
 
 def get_artifact_metrics(
@@ -60,9 +22,11 @@ def get_artifact_metrics(
     # these should be there...
     if "X_pca" not in adata.obsm:
         sc.pp.pca(adata, n_comps=n_comps)
+        print("warning: no X_pca")
 
     if "X_pca_harmony" not in adata.obsm:
         sc.external.pp.harmony_integrate(adata, "sample")
+        print("warning: no X_pca_harmony")
 
     adata.obsm["Unintegrated"] = adata.obsm["X_pca"]
     biocons = BioConservation(isolated_labels=False)
@@ -70,12 +34,11 @@ def get_artifact_metrics(
         adata,
         batch_key=batch_key,
         label_key=label_key,
-        embedding_obsm_keys=["Unintegrated", "X_scvi", "X_pca_harmony"],
+        embedding_obsm_keys=["Unintegrated", "X_scVI", "X_pca_harmony"],
         pre_integrated_embedding_obsm_key="X_pca",
         bio_conservation_metrics=biocons,
         n_jobs=-1,
     )
-    bm.prepare(neighbor_computer=faiss_brute_force_nn)
     bm.benchmark()
 
     bm.plot_results_table(min_max_scale=False, save_dir=scib_report_dir)
@@ -108,7 +71,7 @@ if __name__ == "__main__":
         "--label-key",
         dest="label_key",
         type=str,
-        default="cell_type",
+        default="C_scANVI",
         help="key to reference our 'cell_type' labels",
     )
     parser.add_argument(

@@ -9,7 +9,9 @@ from helpers import score_cell_cycle, update_validation_metrics
 
 
 def process_adata(
-    adata: AnnData, markers: pd.DataFrame, batch_key: str
+    adata: AnnData, 
+    # markers: pd.DataFrame, 
+    batch_key: str
 ) -> tuple[AnnData, pd.DataFrame, pd.DataFrame]:
     """
     do feature selection and add PCA
@@ -29,9 +31,9 @@ def process_adata(
     # get cell cycle scores
     score_cell_cycle(adata, organism="human")
 
-    ### MAKE SURE MARKER GENES ARE KEPT
-    # defensive
-    markers = markers[~markers.index.duplicated(keep="first")].rename_axis(index=None)
+    # ### MAKE SURE MARKER GENES ARE KEPT
+    # # defensive
+    # markers = markers[~markers.index.duplicated(keep="first")].rename_axis(index=None)
 
     batch_key = args.batch_key
     # WARNING: using 'sample' can cause loess to fail in the highly_variable_genes function
@@ -51,18 +53,18 @@ def process_adata(
         inplace=False,
     )
 
-    # hack to make sure we keep the marker genes
-    hvgs_full.loc[markers.index, "highly_variable_nbatches"] = (
-        hvgs_full["highly_variable_nbatches"].max() + 1.0
-    )
-    # Sort genes by how often they selected as hvg within each batch and
-    # break ties with median rank of residual variance across batches
-    hvgs_full.sort_values(
-        ["highly_variable_nbatches", "highly_variable_rank"],
-        ascending=[False, True],
-        na_position="last",
-        inplace=True,
-    )
+    # # hack to make sure we keep the marker genes
+    # hvgs_full.loc[markers.index, "highly_variable_nbatches"] = (
+    #     hvgs_full["highly_variable_nbatches"].max() + 1.0
+    # )
+    # # Sort genes by how often they selected as hvg within each batch and
+    # # break ties with median rank of residual variance across batches
+    # hvgs_full.sort_values(
+    #     ["highly_variable_nbatches", "highly_variable_rank"],
+    #     ascending=[False, True],
+    #     na_position="last",
+    #     inplace=True,
+    # )
 
     full_features = adata.var.copy()
 
@@ -89,13 +91,14 @@ def main(args: argparse.Namespace):
 
     # 0. load data
     adata = sc.read_h5ad(args.adata_input)  # type: ignore
-    # 1. load marker_genes
-    # alternative way to get markers:
-    # https://github.com/NIH-CARD/brain-taxonomy/blob/main/markers/cellassign_card_markers.csv
-    markers = pd.read_csv(args.marker_genes, index_col=0)
+    # # 1. load marker_genes
+    # # alternative way to get markers:
+    # # https://github.com/NIH-CARD/brain-taxonomy/blob/main/markers/cellassign_card_markers.csv
+    # markers = pd.read_csv(args.marker_genes, index_col=0)
 
     # 2. process data
-    adata, full_features, hvg_features = process_adata(adata, markers, args.batch_key)
+    # adata, full_features, hvg_features = process_adata(adata, markers, args.batch_key)
+    adata, full_features, hvg_features = process_adata(adata, args.batch_key)
 
     # 3. save the filtered adata
     # save the filtered adata
@@ -104,12 +107,12 @@ def main(args: argparse.Namespace):
     full_features.to_csv(args.full_gene_file, index=True)
     hvg_features.to_csv(args.hvg_file, index=True)
 
-    # 4. update the validation metrics
-    #######  validation metrics
-    val_metrics = pd.read_csv(args.output_validation_file, index_col=0)
-    output_metrics = update_validation_metrics(adata, "filter", val_metrics)
-    # log the validation metrics
-    output_metrics.to_csv(args.output_validation_file, index=True)
+    # # 4. update the validation metrics
+    # #######  validation metrics
+    # val_metrics = pd.read_csv(args.output_validation_file, index_col=0)
+    # output_metrics = update_validation_metrics(adata, "filter", val_metrics)
+    # # log the validation metrics
+    # output_metrics.to_csv(args.output_validation_file, index=True)
 
 
 if __name__ == "__main__":
@@ -141,13 +144,13 @@ if __name__ == "__main__":
         help="number of HVG genes to keep",
         default=3000,
     )
-    parser.add_argument(
-        "--marker-genes",
-        dest="marker_genes",
-        type=str,
-        default="resources/cellassign_card_markers.csv",  # this doesn't seem accurate
-        help="Path to marker_genes .csv file",
-    )
+    # parser.add_argument(
+    #     "--marker-genes",
+    #     dest="marker_genes",
+    #     type=str,
+    #     default="resources/cellassign_card_markers.csv",  # this doesn't seem accurate
+    #     help="Path to marker_genes .csv file",
+    # )
     parser.add_argument(
         "--output-all-genes",
         dest="full_gene_file",
@@ -163,12 +166,6 @@ if __name__ == "__main__":
         help="Output file to save hvg metadata (full genes)",
     )
 
-    parser.add_argument(
-        "--output-validation-file",
-        dest="output_validation_file",
-        type=str,
-        help="Output file to write validation metrics to",
-    )
 
     args = parser.parse_args()
     main(args)

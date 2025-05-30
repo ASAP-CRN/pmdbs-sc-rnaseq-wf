@@ -1,8 +1,12 @@
 import argparse
 import scanpy as sc
-import leidenalg
 from anndata import AnnData
 
+
+SCANVI_LATENT_KEY = "X_scANVI"
+SCVI_LATENT_KEY = "X_scVI"
+
+SCANVI_PREDICTIONS_KEY = "C_scANVI"
 
 def get_cluster_umap(adata: AnnData, latent_key: str) -> AnnData:
     ### fixed parameters (TODO: make an argument)
@@ -14,9 +18,10 @@ def get_cluster_umap(adata: AnnData, latent_key: str) -> AnnData:
     # calculate neighbor graph on scVI latent
     sc.pp.neighbors(adata, n_neighbors=n_neighbors, use_rep=latent_key)
     # do leiden
+    # change to igraph for future default compatibility
     for resolution in leiden_reslns:
         sc.tl.leiden(
-            adata, resolution=resolution, key_added=f"leiden_res_{resolution:4.2f}"
+            adata, resolution=resolution, key_added=f"leiden_res_{resolution:4.2f}", flavor="igraph", n_iterations=2, directed = False
         )
     sc.tl.umap(adata)
     return adata
@@ -28,7 +33,9 @@ def main(args: argparse.Namespace):
 
     """
     adata = sc.read_h5ad(args.adata_input)  # type: ignore
-    adata = get_cluster_umap(adata, args.latent_key)
+    # Hard code latent_key
+    latent_key = SCVI_LATENT_KEY
+    adata = get_cluster_umap(adata, latent_key)
     adata.write_h5ad(filename=args.adata_output, compression="gzip")
 
 
@@ -46,12 +53,6 @@ if __name__ == "__main__":
         type=str,
         help="Output file to save AnnData object to",
     )
-    parser.add_argument(
-        "--latent-key",
-        dest="latent_key",
-        type=str,
-        default="X_scvi",
-        help="Latent key to the scvi latent",
-    )
+
     args = parser.parse_args()
     main(args)
