@@ -29,6 +29,8 @@ The workflow is broken up into two main chunks:
 1. [Preprocessing](#preprocessing)
 2. [Cohort analysis](#cohort-analysis)
 
+> NOTE: The details of the cohort analysis are described in the [docker/scvi/scripts/README.md](docker/scvi/scripts/README.md)
+
 ## Preprocessing
 
 Run once per sample; only rerun when the preprocessing workflow version is updated. Preprocessing outputs are stored in the originating team's raw and staging data buckets.
