@@ -29,7 +29,7 @@ The workflow is broken up into two main chunks:
 1. [Preprocessing](#preprocessing)
 2. [Cohort analysis](#cohort-analysis)
 
-> NOTE: The details of the cohort analysis are described in the [docker/scvi/scripts/README.md](docker/scvi/scripts/README.md)
+> Note: The details of the cohort analysis are described in the [scvi docker README](docker/scvi/scripts/README.md).
 
 ## Preprocessing
 
@@ -90,7 +90,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 ## Generating the inputs JSON
 
-The inputs JSON may be generated manually, however when running a large number of samples, this can become unwieldly. The `generate_inputs` utility script may be used to automatically generate the inputs JSON. The script requires the libraries outlined in [the requirements.txt file](wf-common/util/requirements.txt) and the following inputs:
+The inputs JSON may be generated manually, however when running a large number of samples, this can become unwieldly. The `generate_inputs` utility script may be used to automatically generate the inputs JSON. The script requires the libraries outlined in [the requirements.txt file](https://github.com/ASAP-CRN/wf-common/blob/main/util/requirements.txt) and the following inputs:
 
 - `project-tsv`: One or more project TSVs with one row per sample and columns team_id, sample_id, batch, fastq_path. All samples from all projects may be included in the same project TSV, or multiple project TSVs may be provided.
     - `team_id`: A unique identifier for the team from which the sample(s) arose
@@ -231,7 +231,7 @@ asap-dev-{cohort,team-xxyy}-{source}-{dataset}
 
 ## Promoting staging data
 
-The [`promote_staging_data` script](wf-common/util/promote_staging_data) can be used to promote staging data that has been approved to the curated data bucket for a team or set of teams.
+The [`promote_staging_data` script](https://github.com/ASAP-CRN/wf-common/blob/main/util/promote_staging_data) can be used to promote staging data that has been approved to the curated data bucket for a team or set of teams.
 
 This script compiles bucket and file information for both the initial (staging) and target (prod) environment. It also runs data integrity tests to ensure staging data can be promoted and generates a Markdown report. It (1) checks that files are not empty and are not less than or equal to 10 bytes (factoring in white space) and (2) checks that files have associated metadata and is present in MANIFEST.tsv.
 
