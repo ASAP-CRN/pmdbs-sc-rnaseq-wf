@@ -45,6 +45,7 @@ workflow cohort_analysis {
 
 		String workflow_name
 		String workflow_version
+		String release_version
 		String workflow_release
 		String run_timestamp
 		String raw_data_path_prefix
@@ -197,7 +198,8 @@ workflow cohort_analysis {
 		input:
 			output_file_paths = preprocessing_output_file_paths,
 			staging_data_buckets = staging_data_buckets,
-			staging_data_path = "~{workflow_name}/preprocess",
+			staging_data_path = "~{workflow_name}/release/~{release_version}/preprocess",
+			workflow_version = workflow_version,
 			billing_project = billing_project,
 			zones = zones
 	}
@@ -246,7 +248,8 @@ workflow cohort_analysis {
 		input:
 			output_file_paths = cohort_analysis_final_output_paths,
 			staging_data_buckets = staging_data_buckets,
-			staging_data_path = "~{workflow_name}/~{sub_workflow_name}",
+			staging_data_path = "~{workflow_name}/release/~{release_version}/~{sub_workflow_name}",
+			workflow_version = workflow_version,
 			billing_project = billing_project,
 			zones = zones
 	}
