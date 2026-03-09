@@ -39,9 +39,9 @@ workflow preprocess {
 	String adata_raw_data_path = "~{workflow_raw_data_path_prefix}/counts_to_adata/~{adata_task_version}"
 
 	scatter (sample_object in samples) {
-		String cellranger_count_output = "~{cellranger_raw_data_path}/~{sample_object.sample_id}.raw_feature_bc_matrix.h5"
-		String cellbender_count_output = "~{cellbender_raw_data_path}/~{sample_object.sample_id}.cellbender.h5"
-		String initial_adata_object_output = "~{adata_raw_data_path}/~{sample_object.sample_id}.cleaned_unfiltered.h5ad"
+		String cellranger_count_output = "~{cellranger_raw_data_path}/~{sample_object.asap_sample_id}.raw_feature_bc_matrix.h5"
+		String cellbender_count_output = "~{cellbender_raw_data_path}/~{sample_object.asap_sample_id}.cellbender.h5"
+		String initial_adata_object_output = "~{adata_raw_data_path}/~{sample_object.asap_sample_id}.cleaned_unfiltered.h5ad"
 	}
 
 	# For each sample, outputs an array of true/false: [cellranger_counts_complete, remove_technical_artifacts_complete, initial_adata_object_complete]
@@ -57,21 +57,21 @@ workflow preprocess {
 	scatter (index in range(length(samples))) {
 		Sample sample = samples[index]
 
-		Array[String] project_sample_id = [team_id, sample.sample_id, dataset_doi_url]
+		Array[String] project_sample_id = [team_id, sample.asap_sample_id, dataset_doi_url]
 
 		String cellranger_count_complete = check_output_files_exist.sample_preprocessing_complete[index][0]
 		String cellbender_remove_background_complete = check_output_files_exist.sample_preprocessing_complete[index][1]
 		String initial_adata_object_complete = check_output_files_exist.sample_preprocessing_complete[index][2]
 
-		String cellranger_raw_counts = "~{cellranger_raw_data_path}/~{sample.sample_id}.raw_feature_bc_matrix.h5"
-		String cellranger_filtered_counts = "~{cellranger_raw_data_path}/~{sample.sample_id}.filtered_feature_bc_matrix.h5"
-		String cellranger_molecule_info = "~{cellranger_raw_data_path}/~{sample.sample_id}.molecule_info.h5"
-		String cellranger_metrics_summary_csv = "~{cellranger_raw_data_path}/~{sample.sample_id}.metrics_summary.csv"
+		String cellranger_raw_counts = "~{cellranger_raw_data_path}/~{sample.asap_sample_id}.raw_feature_bc_matrix.h5"
+		String cellranger_filtered_counts = "~{cellranger_raw_data_path}/~{sample.asap_sample_id}.filtered_feature_bc_matrix.h5"
+		String cellranger_molecule_info = "~{cellranger_raw_data_path}/~{sample.asap_sample_id}.molecule_info.h5"
+		String cellranger_metrics_summary_csv = "~{cellranger_raw_data_path}/~{sample.asap_sample_id}.metrics_summary.csv"
 
 		if (cellranger_count_complete == "false") {
 			call cellranger_count {
 				input:
-					sample_id = sample.sample_id,
+					sample_id = sample.asap_sample_id,
 					fastq_R1s = sample.fastq_R1s,
 					fastq_R2s = sample.fastq_R2s,
 					fastq_I1s = sample.fastq_I1s,
@@ -91,19 +91,19 @@ workflow preprocess {
 		File molecule_info_output = select_first([cellranger_count.molecule_info, cellranger_molecule_info]) #!FileCoercion
 		File metrics_summary_csv_output = select_first([cellranger_count.metrics_summary_csv, cellranger_metrics_summary_csv]) #!FileCoercion
 
-		String cellbender_report_html = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender_report.html"
-		String cellbender_removed_background_counts = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender.h5"
-		String cellbender_filtered_removed_background_counts = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender_filtered.h5"
-		String cellbender_cell_barcodes_csv = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender_cell_barcodes.csv"
-		String cellbender_graph_pdf = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender.pdf"
-		String cellbender_log = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender.log"
-		String cellbender_metrics_csv = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender_metrics.csv"
-		String cellbender_posterior_probability = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbend_posterior.h5"
+		String cellbender_report_html = "~{cellbender_raw_data_path}/~{sample.asap_sample_id}.cellbender_report.html"
+		String cellbender_removed_background_counts = "~{cellbender_raw_data_path}/~{sample.asap_sample_id}.cellbender.h5"
+		String cellbender_filtered_removed_background_counts = "~{cellbender_raw_data_path}/~{sample.asap_sample_id}.cellbender_filtered.h5"
+		String cellbender_cell_barcodes_csv = "~{cellbender_raw_data_path}/~{sample.asap_sample_id}.cellbender_cell_barcodes.csv"
+		String cellbender_graph_pdf = "~{cellbender_raw_data_path}/~{sample.asap_sample_id}.cellbender.pdf"
+		String cellbender_log = "~{cellbender_raw_data_path}/~{sample.asap_sample_id}.cellbender.log"
+		String cellbender_metrics_csv = "~{cellbender_raw_data_path}/~{sample.asap_sample_id}.cellbender_metrics.csv"
+		String cellbender_posterior_probability = "~{cellbender_raw_data_path}/~{sample.asap_sample_id}.cellbend_posterior.h5"
 
 		if (cellbender_remove_background_complete == "false") {
 			call remove_technical_artifacts {
 				input:
-					sample_id = sample.sample_id,
+					sample_id = sample.asap_sample_id,
 					raw_counts = raw_counts_output,
 					cellbender_fpr = cellbender_fpr,
 					raw_data_path = cellbender_raw_data_path,
@@ -123,12 +123,12 @@ workflow preprocess {
 		File metrics_csv_output = select_first([remove_technical_artifacts.metrics_csv, cellbender_metrics_csv]) #!FileCoercion
 		File posterior_probability_output = select_first([remove_technical_artifacts.posterior_probability, cellbender_posterior_probability]) #!FileCoercion
 
-		String preprocessed_adata_object = "~{adata_raw_data_path}/~{sample.sample_id}.cleaned_unfiltered.h5ad"
+		String preprocessed_adata_object = "~{adata_raw_data_path}/~{sample.asap_sample_id}.cleaned_unfiltered.h5ad"
 
 		if (initial_adata_object_complete == "false") {
 			call counts_to_adata {
 				input:
-					sample_id = sample.sample_id,
+					sample_id = sample.asap_sample_id,
 					batch = select_first([sample.batch]),
 					team_id = team_id,
 					dataset_id = dataset_id,

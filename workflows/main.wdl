@@ -75,9 +75,9 @@ workflow sc_rnaseq_analysis {
 
 		call Preprocess.preprocess {
 			input:
-				team_id = project.team_id,
-				dataset_id = project.dataset_id,
-				dataset_doi_url = project.dataset_doi_url,
+				team_id = project.asap_team_id,
+				dataset_id = project.asap_dataset_id,
+				dataset_doi_url = project.asap_dataset_doi_url,
 				samples = project.samples,
 				multimodal_sc_data = project.multimodal_sc_data,
 				cellranger_reference_data = cellranger_reference_data,
@@ -111,7 +111,7 @@ workflow sc_rnaseq_analysis {
 		if (project.run_project_cohort_analysis) {
 			call CohortAnalysis.cohort_analysis as project_cohort_analysis {
 				input:
-					cohort_id = project.team_id,
+					cohort_id = project.asap_team_id,
 					project_sample_ids = preprocess.project_sample_ids,
 					preprocessed_adata_objects = preprocess.initial_adata_object,
 					preprocessing_output_file_paths = preprocessing_output_file_paths,
