@@ -57,8 +57,8 @@ workflow sc_rnaseq_analysis {
 
 	String workflow_execution_path = "workflow_execution"
 	String workflow_version = "v4.0.0"
-	String release_version = "v4.0.0"
-	String workflow_release = "https://github.com/ASAP-CRN/sc-rnaseq-wf/releases/tag/sc_rnaseq_analysis-~{release_version}"
+	String workflow_release = "https://github.com/ASAP-CRN/sc-rnaseq-wf/releases/tag/sc_rnaseq_analysis-~{workflow_version}"
+	String crn_release_version = "v4.0.0"
 
 	call GetWorkflowName.get_workflow_name {
 		input:
@@ -135,8 +135,8 @@ workflow sc_rnaseq_analysis {
 					features = features,
 					workflow_name = get_workflow_name.workflow_name,
 					workflow_version = workflow_version,
-					release_version = release_version,
 					workflow_release = workflow_release,
+					crn_release_version = crn_release_version,
 					run_timestamp = get_workflow_metadata.timestamp,
 					raw_data_path_prefix = project_raw_data_path_prefix,
 					staging_data_buckets = project.staging_data_buckets,
@@ -175,8 +175,8 @@ workflow sc_rnaseq_analysis {
 				features = features,
 				workflow_name = get_workflow_name.workflow_name,
 				workflow_version = workflow_version,
-				release_version = release_version,
 				workflow_release = workflow_release,
+				crn_release_version = crn_release_version,
 				run_timestamp = get_workflow_metadata.timestamp,
 				raw_data_path_prefix = cohort_raw_data_path_prefix,
 				staging_data_buckets = cohort_staging_data_buckets,
