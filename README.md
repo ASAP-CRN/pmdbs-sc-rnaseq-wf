@@ -175,7 +175,7 @@ Data may be synced using [the `promote_staging_data` script](#promoting-staging-
 asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
 └── ${workflow_name}
     └── release
-        └── ${release_version}
+        └── ${crn_release_version}
             ├── cohort_analysis
             │   ├── ${cohort_id}.sample_list.tsv
             │   ├── ${cohort_id}.merged_cleaned_unfiltered.h5ad
