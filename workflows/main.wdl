@@ -287,7 +287,7 @@ workflow sc_rnaseq_analysis {
 	}
 
 	meta {
-		description: "Harmonized human postmortem-derived brain sequencing (PMDBS) and non-human (mouse) brain sc/sn RNA-seq workflow"
+		description: "Harmonized human postmortem-derived brain sequencing (PMDBS) and non-human (mouse) brain sc/sn RNA-seq workflow."
 	}
 
 	parameter_meta {
