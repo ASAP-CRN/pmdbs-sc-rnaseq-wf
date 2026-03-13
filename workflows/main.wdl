@@ -329,7 +329,6 @@ task get_workflow_name {
 	command <<<
 		set -euo pipefail
 
-		# Sc/sn RNAseq pipeline
 		if [[ ~{organism} == "human" ]]; then
 			echo "Detected: [~{organism}]"
 			workflow_name="pmdbs_sc_rnaseq"
