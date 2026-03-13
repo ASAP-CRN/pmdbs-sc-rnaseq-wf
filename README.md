@@ -135,6 +135,7 @@ Example usage:
     --inputs-template workflows/inputs.json \
     --run-project-cohort-analysis \
     --workflow-name sc_rnaseq_analysis \
+    --release-version v5.0.0 \
     --cohort-dataset-id cohort-pmdbs-sc-rnaseq
 ```
 
