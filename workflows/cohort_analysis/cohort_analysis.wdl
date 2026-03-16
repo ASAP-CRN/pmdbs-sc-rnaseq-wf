@@ -354,7 +354,7 @@ task merge_and_plot_qc_metrics {
 
 		while read -r adata_objects || [[ -n "${adata_objects}" ]]; do 
 			adata_path=$(realpath "${adata_objects}")
-			sample=$(basename "${adata_path}" ".adata_object.h5ad")
+			sample=$(basename "${adata_path}" ".cleaned_unfiltered.h5ad")
 			echo -e "${sample}\t${adata_path}" >> adata_samples_paths.tsv
 		done < ~{write_lines(preprocessed_adata_objects)}
 
