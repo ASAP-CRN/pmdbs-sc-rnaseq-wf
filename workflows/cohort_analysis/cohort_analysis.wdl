@@ -199,7 +199,6 @@ workflow cohort_analysis {
 			output_file_paths = preprocessing_output_file_paths,
 			staging_data_buckets = staging_data_buckets,
 			staging_data_path = "~{workflow_name}/release/~{crn_release_version}/preprocess",
-			workflow_version = workflow_version,
 			billing_project = billing_project,
 			zones = zones
 	}
@@ -249,7 +248,6 @@ workflow cohort_analysis {
 			output_file_paths = cohort_analysis_final_output_paths,
 			staging_data_buckets = staging_data_buckets,
 			staging_data_path = "~{workflow_name}/release/~{crn_release_version}/~{sub_workflow_name}",
-			workflow_version = workflow_version,
 			billing_project = billing_project,
 			zones = zones
 	}
