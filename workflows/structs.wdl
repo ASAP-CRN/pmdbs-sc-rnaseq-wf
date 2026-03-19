@@ -1,7 +1,7 @@
 version 1.0
 
 struct Sample {
-	String asap_sample_id
+	String sample_id
 	String? batch
 
 	Array[File]+ fastq_R1s
