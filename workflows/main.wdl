@@ -3,7 +3,6 @@ version 1.0
 # Harmonized human PMDBS and non-human (mouse) brain sc/sn RNAseq workflow entrypoint
 
 import "structs.wdl"
-import "../wf-common/wdl/tasks/get_workflow_name.wdl" as GetWorkflowName
 import "../wf-common/wdl/tasks/get_workflow_metadata.wdl" as GetWorkflowMetadata
 import "preprocess/preprocess.wdl" as Preprocess
 import "cohort_analysis/cohort_analysis.wdl" as CohortAnalysis
@@ -58,8 +57,9 @@ workflow sc_rnaseq_analysis {
 	String workflow_execution_path = "workflow_execution"
 	String workflow_version = "v4.0.0"
 	String workflow_release = "https://github.com/ASAP-CRN/sc-rnaseq-wf/releases/tag/sc_rnaseq_analysis-~{workflow_version}"
+	String crn_release_version = "v4.0.0"
 
-	call GetWorkflowName.get_workflow_name {
+	call get_workflow_name {
 		input:
 			organism = organism,
 			zones = zones
@@ -75,9 +75,9 @@ workflow sc_rnaseq_analysis {
 
 		call Preprocess.preprocess {
 			input:
-				team_id = project.team_id,
-				dataset_id = project.dataset_id,
-				dataset_doi_url = project.dataset_doi_url,
+				team_id = project.asap_team_id,
+				dataset_id = project.asap_dataset_id,
+				dataset_doi_url = project.asap_dataset_doi_url,
 				samples = project.samples,
 				multimodal_sc_data = project.multimodal_sc_data,
 				cellranger_reference_data = cellranger_reference_data,
@@ -111,7 +111,7 @@ workflow sc_rnaseq_analysis {
 		if (project.run_project_cohort_analysis) {
 			call CohortAnalysis.cohort_analysis as project_cohort_analysis {
 				input:
-					cohort_id = project.team_id,
+					cohort_id = project.asap_team_id,
 					project_sample_ids = preprocess.project_sample_ids,
 					preprocessed_adata_objects = preprocess.initial_adata_object,
 					preprocessing_output_file_paths = preprocessing_output_file_paths,
@@ -135,6 +135,7 @@ workflow sc_rnaseq_analysis {
 					workflow_name = get_workflow_name.workflow_name,
 					workflow_version = workflow_version,
 					workflow_release = workflow_release,
+					crn_release_version = crn_release_version,
 					run_timestamp = get_workflow_metadata.timestamp,
 					raw_data_path_prefix = project_raw_data_path_prefix,
 					staging_data_buckets = project.staging_data_buckets,
@@ -174,6 +175,7 @@ workflow sc_rnaseq_analysis {
 				workflow_name = get_workflow_name.workflow_name,
 				workflow_version = workflow_version,
 				workflow_release = workflow_release,
+				crn_release_version = crn_release_version,
 				run_timestamp = get_workflow_metadata.timestamp,
 				raw_data_path_prefix = cohort_raw_data_path_prefix,
 				staging_data_buckets = cohort_staging_data_buckets,
@@ -284,7 +286,7 @@ workflow sc_rnaseq_analysis {
 	}
 
 	meta {
-		description: "Harmonized human postmortem-derived brain sequencing (PMDBS) and non-human (mouse) brain sc/sn RNA-seq workflow"
+		description: "Harmonized human postmortem-derived brain sequencing (PMDBS) and non-human (mouse) brain sc/sn RNA-seq workflow."
 	}
 
 	parameter_meta {
@@ -315,5 +317,45 @@ workflow sc_rnaseq_analysis {
 		cohort_staging_data_buckets: {help: "Set of buckets to stage cross-team cohort analysis outputs in."}
 		container_registry: {help: "Container registry where workflow Docker images are hosted."}
 		zones: {help: "Space-delimited set of GCP zones to spin up compute in."}
+	}
+}
+
+task get_workflow_name {
+	input {
+		String organism
+		String zones
+	}
+
+	command <<<
+		set -euo pipefail
+
+		if [[ ~{organism} == "human" ]]; then
+			echo "Detected: [~{organism}]"
+			workflow_name="pmdbs_sc_rnaseq"
+			echo "${workflow_name}" > workflow_name.txt
+			echo "Running: [${workflow_name}]"
+		elif [[ ~{organism} == "mouse" ]]; then
+			echo "Detected: [~{organism}]"
+			workflow_name="mouse_sc_rnaseq"
+			echo "${workflow_name}" > workflow_name.txt
+			echo "Running: [${workflow_name}]"
+		else
+			echo "[ERROR] Invalid organism for sc/sn RNAseq: [~{organism}]"
+			printf "Please select a valid organism for sc/sn RNAseq:\n  human\n  mouse"
+			exit 1
+		fi
+	>>>
+
+	output {
+		String workflow_name = read_string("workflow_name.txt")
+	}
+
+	runtime {
+		docker: "gcr.io/google.com/cloudsdktool/google-cloud-cli:524.0.0-slim"
+		cpu: 2
+		memory: "4 GB"
+		disks: "local-disk 10 HDD"
+		preemptible: 3
+		zones: zones
 	}
 }

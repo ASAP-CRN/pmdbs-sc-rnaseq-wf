@@ -167,6 +167,28 @@ workflow preprocess {
 		# AnnData counts
 		Array[File] initial_adata_object = preprocessed_adata_object_output #!FileCoercion
 	}
+
+	meta {
+		description: "Preprocess the 10x Genomics Single Cell RNA-seq data by running Cell Ranger count, CellBender ambient RNA removal, and converting counts to AnnData object."
+	}
+
+	parameter_meta {
+		team_id: {help: "Name of the CRN Team; stored in the AnnData objects."}
+		dataset_id: {help: "Generated ASAP dataset ID; stored in the AnnData objects."}
+		dataset_doi_url: {help: "Generated Zenodo DOI URL referencing the dataset."}
+		samples: {help: "An array of Sample struct, set of samples and their associated reads and metadata information."}
+		multimodal_sc_data: {help: "Whether or not the sc/sn RNAseq is from multimodal data."}
+		cellranger_reference_data: {help: "CellRanger transcriptome reference data; see https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest."}
+		cellbender_fpr: {help: "Cellbender false positive rate. [0.0]"}
+		workflow_name: {help: "Workflow name; stored in the file-level manifest and final manifest with all saved files."}
+		workflow_version: {help: "Workflow version; stored in the file-level manifest and final manifest with all saved files."}
+		workflow_release: {help: "GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		run_timestamp: {help: "UTC timestamp; stored in the file-level manifest and final manifest with all saved files."}
+		raw_data_path_prefix: {help: "Raw data bucket path prefix; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess`)."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task check_output_files_exist {
@@ -317,6 +339,25 @@ task cellranger_count {
 		bootDiskSizeGb: 40
 		zones: zones
 	}
+
+	meta {
+		description: "Processes raw sequencing data from 10x sc RNA-seq experiments to generate raw and filtered feature-barcode count matrices."
+	}
+
+	parameter_meta {
+		sample_id: {help: "Generated ASAP sample ID; used to name output files."}
+		fastq_R1s: {help: "Sample's read 1 FASTQ file."}
+		fastq_R2s: {help: "Sample's read 2 FASTQ file."}
+		fastq_I1s: {help: "Optional FASTQ index 1."}
+		fastq_I2s: {help: "Optional FASTQ index 2."}
+		multimodal_sc_data: {help: "Whether or not the sc/sn RNAseq is from multimodal data."}
+		cellranger_reference_data: {help: "CellRanger transcriptome reference data; see https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest."}
+		raw_data_path: {help: "Raw data bucket path for cellranger-atac count outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess/cellranger/<cellranger_task_version>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task remove_technical_artifacts {
@@ -385,6 +426,21 @@ task remove_technical_artifacts {
 		gpuType: "nvidia-tesla-t4"
 		gpuCount: 1
 	}
+
+	meta {
+		description: "Removes ambient RNA and technical noise from raw CellRanger count matrices using CellBender."
+	}
+
+	parameter_meta {
+		sample_id: {help: "Generated ASAP sample ID; used to name output files."}
+		raw_counts: {help: "Raw CellRanger count matrix (H5 format) to process."}
+		cellbender_fpr: {help: "Cellbender false positive rate. [0.0]"}
+		raw_data_path: {help: "Raw data bucket path for cellbender outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess/cellbender/<cellbender_task_version>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task counts_to_adata {
@@ -436,5 +492,22 @@ task counts_to_adata {
 		preemptible: 3
 		bootDiskSizeGb: 40
 		zones: zones
+	}
+
+	meta {
+		description: "Converts CellBender-cleaned Cell Ranger counts into AnnData objects using Scanpy."
+	}
+
+	parameter_meta {
+		sample_id: {help: "Generated ASAP sample ID; stored in the AnnData objects and used to name output files."}
+		batch: {help: "The sample's batch; stored in the AnnData objects."}
+		team_id: {help: "Name of the CRN Team; stored in the AnnData objects."}
+		dataset_id: {help: "Generated ASAP dataset ID; stored in the AnnData objects."}
+		cellbender_counts: {help: "CellBender-cleaned count matrix (H5 format)."}
+		raw_data_path: {help: "Raw data bucket path for counts to adata outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess/counts_to_adata/<adata_task_version>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }

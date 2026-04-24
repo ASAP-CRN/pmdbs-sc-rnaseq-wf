@@ -83,9 +83,9 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 | Type | Name | Description |
 | :- | :- | :- |
-| String | team_id | Unique identifier for team; used for naming output files. |
-| String | dataset_id | Unique identifier for dataset; used for metadata. |
-| String | dataset_doi_url | Generated Zenodo DOI URL referencing the dataset. |
+| String | asap_team_id | ASAP-generated unique identifier for team; used for naming output files. |
+| String | asap_dataset_id | ASAP-generated unique identifier for dataset; used for metadata. |
+| String | asap_dataset_doi_url | ASAP-generated Zenodo DOI URL referencing the dataset. |
 | Array[[Sample](#sample)] | samples | The set of samples associated with this project. |
 | Boolean | multimodal_sc_data | Whether or not the sc/sn RNAseq is from multimodal data. |
 | Boolean | run_project_cohort_analysis | Whether or not to run cohort analysis within the project. |
@@ -96,7 +96,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 | Type | Name | Description |
 | :- | :- | :- |
-| String | sample_id | Unique identifier for the sample within the project. |
+| String | sample_id | ASAP-generated unique identifier combined with the replicate for the sample within the project. |
 | String? | batch | The sample's batch. If unset, the analysis will stop after running `cellranger_count`. |
 | File | fastq_R1 | Path to the sample's read 1 FASTQ file. |
 | File | fastq_R2 | Path to the sample's read 2 FASTQ file. |
@@ -105,19 +105,27 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 ## Generating the inputs JSON
 
-The inputs JSON may be generated manually, however when running a large number of samples, this can become unwieldly. The [`generate_inputs` utility script](https://github.com/ASAP-CRN/wf-common/blob/main/util/generate_inputs) may be used to automatically generate the inputs JSON (`inputs.{staging_env}.{source}-{cohort_dataset}.{date}.json`) and a sample list TSV (`{team_id}.{source}-{cohort_dataset}.sample_list.{date}.tsv`); same as the one generated in [the write_cohort_sample_list task](https://github.com/ASAP-CRN/wf-common/wdl/tasks/write_cohort_sample_list.wdl)). The script requires the libraries outlined in [the requirements.txt file](https://github.com/ASAP-CRN/wf-common/util/requirements.txt) and the following inputs:
+The inputs JSON may be generated manually, however when running a large number of samples, this can become unwieldly. The [`generate_inputs` utility script](https://github.com/ASAP-CRN/wf-common/blob/main/util/generate_inputs) may be used to automatically generate the inputs JSON (`inputs.{staging_env}.{cohort_dataset_id}.{date}.json`) and a sample list TSV (`{team_id}.{cohort_dataset_id}.sample_list.{date}.tsv`); same as the one generated in [the write_cohort_sample_list task](https://github.com/ASAP-CRN/wf-common/wdl/tasks/write_cohort_sample_list.wdl)). The script requires the libraries outlined in [the requirements.txt file](https://github.com/ASAP-CRN/wf-common/util/requirements.txt) and the following inputs:
 
-- `project-tsv`: One or more project TSVs with one row per sample and columns team_id, sample_id, batch, fastq_path. All samples from all projects may be included in the same project TSV, or multiple project TSVs may be provided.
-    - `team_id`: A unique identifier for the team from which the sample(s) arose
-    - `dataset_id`: A unique identifier for the dataset from which the sample(s) arose
-    - `sample_id`: A unique identifier for the sample within the project
-    - `batch`: The sample's batch
-    - `fastq_path`: The directory in which paired sample FASTQs may be found, including the gs:// bucket name and path
-        - This is appended to the `project-tsv` from the `fastq-locs-txt`: FASTQ locations for all samples provided in the `project-tsv`, one per line. Each sample is expected to have one set of paired fastqs located at `${fastq_path}/${sample_id}*`. The read 1 file should include 'R1' somewhere in the filename; the read 2 file should inclue 'R2' somewhere in the filename. Generate this file e.g. by running `gcloud storage ls gs://fastq_bucket/some/path/**.fastq.gz >> fastq_locs.txt`
+- `project-tsv`: One or more project TSVs with one row per sample and columns team_id, ASAP_dataset_id, ASAP_sample_id, batch, fastq_R1s, fastq_R2s, fastq_R3s, fastq_I1s, fastq_I2s, embargoed, source, modality_flavour, dataset_DOI_url, and SPATIAL columns if applicable: geomx_config, geomx_dsp_config, geomx_annotation_file, visium_cytassist, visium_probe_set, visium_slide_ref, and visium_capture_area. All samples from all projects may be included in the same project TSV, or multiple project TSVs may be provided.
+    - `team_id`: A unique identifier for the team from which the sample(s) arose.
+    - `ASAP_dataset_id`: A generated unique identifier for the dataset from which the sample(s) arose.
+    - `ASAP_sample_id`: A generated unique identifier for the sample within the project.
+    - `batch`: The sample's batch.
+    - `fastq_R1s`: The gs uri to read 1 of sample FASTQ.
+        - This is appended to the `project-tsv` from the `fastq-locs-txt`: FASTQ locations for all samples provided in the `project-tsv`. Each sample is expected to have one set of paired fastqs located at `${fastq_path}/${sample_id}*`. The read 1 file should include 'R1' somewhere in the filename. Generate this file e.g. by running `gcloud storage ls gs://fastq_bucket/some/path/**.fastq.gz >> fastq_locs.txt`.
+    - `fastq_R2s`: The gs uri to read 2 of sample FASTQ.
+        - This is appended to the `project-tsv` from the `fastq-locs-txt`: FASTQ locations for all samples provided in the `project-tsv`. Each sample is expected to have one set of paired fastqs located at `${fastq_path}/${sample_id}*`. The read 2 file should include 'R2' somewhere in the filename. Generate this file e.g. by running `gcloud storage ls gs://fastq_bucket/some/path/**.fastq.gz >> fastq_locs.txt`.
+    - `fastq_I1s`: The gs uri to sample FASTQ index 1.
+    - `fastq_I2s`: The gs uri to sample FASTQ index 2.
+    - `embargoed`: The internal QC/embargo status of dataset.
+    - `source`: The source of dataset (e.g. 'pmdbs').
+    - `modality_flavour`: The data modality flavour of dataset (e.g. 'sn-rnaseq')
+    - `dataset_DOI_url`: Generated Zenodo DOI URL referencing the dataset.
 - `inputs-template`: The inputs template JSON file into which the `projects` information derived from the `project-tsv` will be inserted. Must have a key ending in `*.projects`. Other default values filled out in the inputs template will be written to the output inputs.json file.
 - `run-project-cohort-analysis`: Optionally run project-level cohort analysis for provided projects. This value will apply to all projects. [false]
 - `workflow_name`: WDL workflow name.
-- `cohort-dataset`: Dataset name in cohort bucket name (e.g. 'sc-rnaseq').
+- `cohort-dataset-id`: Dataset name in cohort bucket id (e.g. 'cohort-pmdbs-sc-rnaseq').
 
 Example usage:
 
@@ -127,7 +135,8 @@ Example usage:
     --inputs-template workflows/inputs.json \
     --run-project-cohort-analysis \
     --workflow-name sc_rnaseq_analysis \
-    --cohort-dataset sc-rnaseq
+    --release-version v5.0.0 \
+    --cohort-dataset-id cohort-pmdbs-sc-rnaseq
 ```
 
 # Outputs
@@ -146,9 +155,9 @@ The raw data bucket will contain *some* artifacts generated as part of workflow 
 In the workflow, task outputs are either specified as `String` (final outputs, which will be copied in order to live in raw data buckets and staging buckets) or `File` (intermediate outputs that are periodically cleaned up, which will live in the cromwell-output bucket). This was implemented to reduce storage costs.
 
 ```bash
-asap-raw-{cohort,team-xxyy}-{source}-{dataset}
-└── ${workflow_name}
-    └── workflow_execution
+asap-raw-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
+└── workflow_execution
+    └── ${workflow_name}
         ├── cohort_analysis
         │   └──${cohort_analysis_workflow_version}
         │       └── ${workflow_run_timestamp}
@@ -167,84 +176,90 @@ asap-raw-{cohort,team-xxyy}-{source}-{dataset}
 
 ### Staging data (intermediate workflow objects and final workflow outputs for the latest run of the workflow)
 
-Following QC by researchers, the objects in the dev or uat bucket are synced into the curated data buckets, maintaining the same file structure. Curated data buckets are named `asap-curated-{cohort,team-xxyy}-{source}-{dataset}`.
+Following QC by researchers, the objects in the dev or uat bucket are synced into the curated data buckets, maintaining the same file structure. Curated data buckets are named `asap-curated-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}` and `dataset_id` = `{cohort,team-xxyy}-{source}-{modality_flavour}-{context}`.
 
 Data may be synced using [the `promote_staging_data` script](#promoting-staging-data).
 
 ```bash
-asap-dev-{cohort,team-xxyy}-{source}-{dataset}
+asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
 └── ${workflow_name}
-    ├── cohort_analysis
-    │   ├── ${cohort_id}.sample_list.tsv
-    │   ├── ${cohort_id}.merged_cleaned_unfiltered.h5ad
-    │   ├── ${cohort_id}.initial_metadata.csv
-    │   ├── ${cohort_id}.doublet_score.violin.png
-    │   ├── ${cohort_id}.n_genes_by_counts.violin.png
-    │   ├── ${cohort_id}.pct_counts_mt.violin.png
-    │   ├── ${cohort_id}.pct_counts_rb.violin.png
-    │   ├── ${cohort_id}.total_counts.violin.png
-    │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD,mmc_markers_mapping}.extended_results.json
-    │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD,mmc_markers_mapping}.results.csv
-    │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD,mmc_markers_mapping}.log.txt 
-    │   ├── ${cohort_id}.all_genes.csv
-    │   ├── ${cohort_id}.hvg_genes.csv
-    │   ├── ${cohort_id}.mmc_results.parquet
-    │   ├── ${cohort_id}.scvi_model.tar.gz
-    │   ├── ${cohort_id}.scanvi_model.tar.gz
-    │   ├── ${cohort_id}.scanvi_cell_types.parquet
-    │   ├── ${cohort_id}.final.h5ad
-    │   ├── ${cohort_id}.final_metadata.csv
-    │   ├── ${cohort_id}.scib_report.csv
-    │   ├── ${cohort_id}.scib_results.svg
-    │   ├── ${cohort_id}.features.umap.png
-    │   ├── ${cohort_id}.groups.umap.png
-    │   └── MANIFEST.tsv
-    └── preprocess
-        ├── ${sampleA_id}.filtered_feature_bc_matrix.h5
-        ├── ${sampleA_id}.metrics_summary.csv
-        ├── ${sampleA_id}.molecule_info.h5
-        ├── ${sampleA_id}.raw_feature_bc_matrix.h5
-        ├── ${sampleA_id}.cellbender_report.html
-        ├── ${sampleA_id}.cellbender_metrics.csv
-        ├── ${sampleA_id}.cellbender_filtered.h5
-        ├── ${sampleA_id}.cellbender_ckpt.tar.gz
-        ├── ${sampleA_id}.cellbender_cell_barcodes.csv
-        ├── ${sampleA_id}.cellbender.pdf
-        ├── ${sampleA_id}.cellbender.log
-        ├── ${sampleA_id}.cellbender.h5
-        ├── ${sampleA_id}.cellbend_posterior.h5
-        ├── ${sampleA_id}.cleaned_unfiltered.h5ad
-        ├── ${sampleB_id}.filtered_feature_bc_matrix.h5
-        ├── ${sampleB_id}.metrics_summary.csv
-        ├── ${sampleB_id}.molecule_info.h5
-        ├── ${sampleB_id}.raw_feature_bc_matrix.h5
-        ├── ${sampleB_id}.cellbender_report.html
-        ├── ${sampleB_id}.cellbender_metrics.csv
-        ├── ${sampleB_id}.cellbender_filtered.h5
-        ├── ${sampleB_id}.cellbender_ckpt.tar.gz
-        ├── ${sampleB_id}.cellbender_cell_barcodes.csv
-        ├── ${sampleB_id}.cellbender.pdf
-        ├── ${sampleB_id}.cellbender.log
-        ├── ${sampleB_id}.cellbender.h5
-        ├── ${sampleB_id}.cellbend_posterior.h5
-        ├── ${sampleB_id}.cleaned_unfiltered.h5ad
-        ├── MANIFEST.tsv
-        ├── ...
-        ├── ${sampleN_id}.filtered_feature_bc_matrix.h5
-        ├── ${sampleN_id}.metrics_summary.csv
-        ├── ${sampleN_id}.molecule_info.h5
-        ├── ${sampleN_id}.raw_feature_bc_matrix.h5
-        ├── ${sampleN_id}.cellbender_report.html
-        ├── ${sampleN_id}.cellbender_metrics.csv
-        ├── ${sampleN_id}.cellbender_filtered.h5
-        ├── ${sampleN_id}.cellbender_ckpt.tar.gz
-        ├── ${sampleN_id}.cellbender_cell_barcodes.csv
-        ├── ${sampleN_id}.cellbender.pdf
-        ├── ${sampleN_id}.cellbender.log
-        ├── ${sampleN_id}.cellbender.h5
-        ├── ${sampleN_id}.cellbend_posterior.h5
-        ├── ${sampleN_id}.cleaned_unfiltered.h5ad
-        └── MANIFEST.tsv
+    └── release
+        └── ${crn_release_version}
+            ├── cohort_analysis
+            │   ├── ${cohort_id}.sample_list.tsv
+            │   ├── ${cohort_id}.merged_cleaned_unfiltered.h5ad
+            │   ├── ${cohort_id}.initial_metadata.csv
+            │   ├── ${cohort_id}.doublet_score.violin.png
+            │   ├── ${cohort_id}.n_genes_by_counts.violin.png
+            │   ├── ${cohort_id}.pct_counts_mt.violin.png
+            │   ├── ${cohort_id}.pct_counts_rb.violin.png
+            │   ├── ${cohort_id}.total_counts.violin.png
+            │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD,mmc_markers_mapping}.extended_results.json
+            │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD,mmc_markers_mapping}.results.csv
+            │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD,mmc_markers_mapping}.log.txt
+            │   ├── ${cohort_id}.all_genes.csv
+            │   ├── ${cohort_id}.hvg_genes.csv
+            │   ├── ${cohort_id}.mmc_results.parquet
+            │   ├── ${cohort_id}.scvi_model.tar.gz
+            │   ├── ${cohort_id}.scanvi_model.tar.gz
+            │   ├── ${cohort_id}.scanvi_cell_types.parquet
+            │   ├── ${cohort_id}.final.h5ad
+            │   ├── ${cohort_id}.final_metadata.csv
+            │   ├── ${cohort_id}.scib_report.csv
+            │   ├── ${cohort_id}.scib_results.svg
+            │   ├── ${cohort_id}.features.umap.png
+            │   ├── ${cohort_id}.groups.umap.png
+            │   └── MANIFEST.tsv
+            ├── preprocess
+            │   ├── ${sampleA_id}.filtered_feature_bc_matrix.h5
+            │   ├── ${sampleA_id}.metrics_summary.csv
+            │   ├── ${sampleA_id}.molecule_info.h5
+            │   ├── ${sampleA_id}.raw_feature_bc_matrix.h5
+            │   ├── ${sampleA_id}.cellbender_report.html
+            │   ├── ${sampleA_id}.cellbender_metrics.csv
+            │   ├── ${sampleA_id}.cellbender_filtered.h5
+            │   ├── ${sampleA_id}.cellbender_ckpt.tar.gz
+            │   ├── ${sampleA_id}.cellbender_cell_barcodes.csv
+            │   ├── ${sampleA_id}.cellbender.pdf
+            │   ├── ${sampleA_id}.cellbender.log
+            │   ├── ${sampleA_id}.cellbender.h5
+            │   ├── ${sampleA_id}.cellbender_posterior.h5
+            │   ├── ${sampleA_id}.cleaned_unfiltered.h5ad
+            │   ├── ${sampleB_id}.filtered_feature_bc_matrix.h5
+            │   ├── ${sampleB_id}.metrics_summary.csv
+            │   ├── ${sampleB_id}.molecule_info.h5
+            │   ├── ${sampleB_id}.raw_feature_bc_matrix.h5
+            │   ├── ${sampleB_id}.cellbender_report.html
+            │   ├── ${sampleB_id}.cellbender_metrics.csv
+            │   ├── ${sampleB_id}.cellbender_filtered.h5
+            │   ├── ${sampleB_id}.cellbender_ckpt.tar.gz
+            │   ├── ${sampleB_id}.cellbender_cell_barcodes.csv
+            │   ├── ${sampleB_id}.cellbender.pdf
+            │   ├── ${sampleB_id}.cellbender.log
+            │   ├── ${sampleB_id}.cellbender.h5
+            │   ├── ${sampleB_id}.cellbender_posterior.h5
+            │   ├── ${sampleB_id}.cleaned_unfiltered.h5ad
+            │   ├── ...
+            │   ├── ${sampleN_id}.filtered_feature_bc_matrix.h5
+            │   ├── ${sampleN_id}.metrics_summary.csv
+            │   ├── ${sampleN_id}.molecule_info.h5
+            │   ├── ${sampleN_id}.raw_feature_bc_matrix.h5
+            │   ├── ${sampleN_id}.cellbender_report.html
+            │   ├── ${sampleN_id}.cellbender_metrics.csv
+            │   ├── ${sampleN_id}.cellbender_filtered.h5
+            │   ├── ${sampleN_id}.cellbender_ckpt.tar.gz
+            │   ├── ${sampleN_id}.cellbender_cell_barcodes.csv
+            │   ├── ${sampleN_id}.cellbender.pdf
+            │   ├── ${sampleN_id}.cellbender.log
+            │   ├── ${sampleN_id}.cellbender.h5
+            │   ├── ${sampleN_id}.cellbender_posterior.h5
+            │   ├── ${sampleN_id}.cleaned_unfiltered.h5ad
+            │   └── MANIFEST.tsv
+            ├── workflow_version # plain text file
+            └── workflow_metadata
+                └── ${timestamp}
+                    ├── MANIFEST.tsv # combined
+                    └── data_promotion_report.md
 ```
 
 ## Promoting staging data
@@ -253,7 +268,7 @@ The [`promote_staging_data` script](https://github.com/ASAP-CRN/wf-common/blob/m
 
 This script compiles bucket and file information for both the initial (staging) and target (prod) environment. It also runs data integrity tests to ensure staging data can be promoted and generates a Markdown report. It (1) checks that files are not empty and are not less than or equal to 10 bytes (factoring in white space) and (2) checks that files have associated metadata and is present in MANIFEST.tsv.
 
-If data integrity tests pass, this script will upload a combined MANIFEST.tsv and the data promotion Markdown report under a metadata/{timestamp} directory in the staging bucket. Previous manifest files and reports will be kept. Next, it will rsync all files in the staging bucket to the curated bucket's preprocess, cohort_analysis, and metadata directories. **Exercise caution when using this script**; files that are not present in the source (staging) bucket will be deleted at the destination (curated) bucket.
+If data integrity tests pass, this script will upload a combined MANIFEST.tsv and the data promotion Markdown report under a metadata/{timestamp} directory in the staging bucket. Previous manifest files and reports will be kept. Next, it will rsync all files in the staging bucket to the curated bucket's workflow and metadata directories. **Exercise caution when using this script**; files that are not present in the source (staging) bucket will be deleted at the destination (curated) bucket.
 
 If data integrity tests fail, staging data cannot be promoted. The combined `MANIFEST.tsv`, Markdown report, and `promote_staging_data_script.log` will be locally available.
 
@@ -263,11 +278,9 @@ The script defaults to a dry run, printing out the files that would be copied or
 
 ```
 -h  Display this message and exit
--t  Space-delimited team(s) to promote data for
 -l  List available teams
--s  Source name in bucket name
--d  Space-delimited dataset name(s) in team bucket name, must follow the same order as {team}
--w  Workflow name used as a directory in bucket
+-w  Workflow name used as a directory in bucket (e.g. 'pmdbs_sc_rnaseq')
+-v  Release version (e.g. v4.0.0)
 -p  Promote data. If this option is not selected, data that would be copied or deleted is printed out, but files are not actually changed (dry run)
 ```
 
@@ -275,16 +288,16 @@ The script defaults to a dry run, printing out the files that would be copied or
 
 ```bash
 # List available teams
-./wf-common/util/promote_staging_data -t cohort -l -s pmdbs -d sc-rnaseq -w pmdbs_sc_rnaseq
+./wf-common/util/promote_staging_data -l -w pmdbs_sc_rnaseq -v v4.0.0
 
-# Print out the files that would be copied or deleted from the staging bucket to the curated bucket for teams team-hafler, team-lee, and cohort
-./wf-common/util/promote_staging_data -t team-hafler team-lee cohort -s pmdbs -d sc-rnaseq -w pmdbs_sc_rnaseq
+# Print out the files that would be copied or deleted from the staging bucket to the curated bucket for teams' datasets processed through the sc RNA-seq pipeline for a specific release version
+./wf-common/util/promote_staging_data -w pmdbs_sc_rnaseq -v v4.0.0
 
-# Promote data for team-scherzer, team-sulzer, and cohort
-./wf-common/util/promote_staging_data -t team-scherzer team-sulzer cohort -s pmdbs -d sc-rnaseq -w pmdbs_sc_rnaseq -p
+# Promote data for teams' datasets processed through the sc RNA-seq pipeline for a specific release version
+./wf-common/util/promote_staging_data -w pmdbs_sc_rnaseq -v v4.0.0 -p
 
-# Promote data for team-cragg, team-biederer, and cohort
-./wf-common/util/promote_staging_data -t team-cragg team-biederer cohort -s mouse -d sc-rnaseq -w mouse_sc_rnaseq -p
+# Promote data for teams' datasets processed through the sc RNA-seq pipeline for a specific release version
+./wf-common/util/promote_staging_data -w mouse_sc_rnaseq -v v4.0.0 -p
 ```
 
 # Docker images

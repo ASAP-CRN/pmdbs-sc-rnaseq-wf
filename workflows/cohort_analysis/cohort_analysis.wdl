@@ -46,6 +46,7 @@ workflow cohort_analysis {
 		String workflow_name
 		String workflow_version
 		String workflow_release
+		String crn_release_version
 		String run_timestamp
 		String raw_data_path_prefix
 		Array[String] staging_data_buckets
@@ -197,7 +198,7 @@ workflow cohort_analysis {
 		input:
 			output_file_paths = preprocessing_output_file_paths,
 			staging_data_buckets = staging_data_buckets,
-			staging_data_path = "~{workflow_name}/preprocess",
+			staging_data_path = "~{workflow_name}/release/~{crn_release_version}/preprocess",
 			billing_project = billing_project,
 			zones = zones
 	}
@@ -246,7 +247,7 @@ workflow cohort_analysis {
 		input:
 			output_file_paths = cohort_analysis_final_output_paths,
 			staging_data_buckets = staging_data_buckets,
-			staging_data_path = "~{workflow_name}/~{sub_workflow_name}",
+			staging_data_path = "~{workflow_name}/release/~{crn_release_version}/~{sub_workflow_name}",
 			billing_project = billing_project,
 			zones = zones
 	}
@@ -291,6 +292,44 @@ workflow cohort_analysis {
 		Array[File] preprocess_manifest_tsvs = upload_preprocess_files.manifests #!FileCoercion
 		Array[File] cohort_analysis_manifest_tsvs = upload_cohort_analysis_files.manifests #!FileCoercion
 	}
+
+	meta {
+		description: "Merges preprocessed per-sample AnnData objects and runs QC filtering, Allen Brain MMC cell type mapping, normalization, scVI/scANVI integration, Leiden clustering, UMAP visualization, Harmony batch correction, and integration quality metrics for a cohort."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		project_sample_ids: {help: "Associated team ID, sample ID, and dataset DOI URL; used to generate a sample list."}
+		preprocessed_adata_objects: {help: "An array of preprocessed AnnData objects to run cohort analysis on."}
+		preprocessing_output_file_paths: {help: "Selected preprocessed output files to upload to the staging bucket alongside selected cohort analysis output files."}
+		pct_counts_mt_max: {help: "Maximum percentage of mitochondrial gene counts allowed per cell. [10]"}
+		doublet_score_max: {help: "Maximum doublet detection score threshold. [0.2]"}
+		total_counts_limits: {help: "Minimum and maximum total UMI (unique molecular identifier) counts per cell. [100, 100000]"}
+		n_genes_by_counts_limits: {help: "Minimum and maximum number of genes detected per cell (genes with at least one count). [100, 10000]"}
+		allen_brain_mmc_precomputed_stats_h5: {help: "A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy)."}
+		allen_brain_mmc_marker_genes_json: {help: "A text file that contains the JSON serialization of a dict file from the Allen Brain Cell Atlas specifying which marker genes to use at which node in the cell type taxonomy. Currently, only used when processing mouse data."}
+		norm_target_sum: {help: "The total count value that each cell will be normalized to. [10000]"}
+		n_top_genes: {help: "Number of HVG genes to keep. [8000]"}
+		n_comps: {help: "Number of principal components to compute. [30]"}
+		scvi_latent_key: {help: "Latent key to save the scVI latent to. ['X_scVI']"}
+		scanvi_latent_key: {help: "Latent key to save the scANVI latent to. ['X_scANVI']"}
+		scanvi_predictions_key: {help: "scANVI cell type predictions column name. ['C_scANVI']"}
+		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		n_neighbors: {help: "The size of local neighborhood (in terms of number of neighboring data points) used for manifold approximation. [15]"}
+		leiden_res: {help: "Leiden resolutions which are the parameter values controlling the coarseness of the clustering. [0.05, 0.1, 0.2, 0.4]"}
+		groups: {help: "Groups to produce umap plots for. ['sample', 'batch', 'cell_type', 'leiden_res_0.05', 'leiden_res_0.10', 'leiden_res_0.20', 'leiden_res_0.40']"}
+		features: {help: "Features to produce umap plots for. ['n_genes_by_counts', 'total_counts', 'pct_counts_mt', 'pct_counts_rb', 'doublet_score', 'S_score', 'G2M_score']"}
+		workflow_name: {help: "Workflow name; stored in the file-level manifest and final manifest with all saved files."}
+		workflow_version: {help: "Workflow version; stored in the file-level manifest and final manifest with all saved files."}
+		workflow_release: {help: "GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		crn_release_version: {help: "CRN Cloud release version; used to organize outputs and for the CRN Cloud release."}
+		run_timestamp: {help: "UTC timestamp; stored in the file-level manifest and final manifest with all saved files."}
+		raw_data_path_prefix: {help: "Raw data bucket path prefix; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis`)."}
+		staging_data_buckets: {help: "Array of staging data buckets to upload intermediate files to (i.e., DEV or UAT buckets depending on internal QC status)."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task merge_and_plot_qc_metrics {
@@ -313,7 +352,7 @@ task merge_and_plot_qc_metrics {
 
 		while read -r adata_objects || [[ -n "${adata_objects}" ]]; do 
 			adata_path=$(realpath "${adata_objects}")
-			sample=$(basename "${adata_path}" ".adata_object.h5ad")
+			sample=$(basename "${adata_path}" ".cleaned_unfiltered.h5ad")
 			echo -e "${sample}\t${adata_path}" >> adata_samples_paths.tsv
 		done < ~{write_lines(preprocessed_adata_objects)}
 
@@ -363,6 +402,20 @@ task merge_and_plot_qc_metrics {
 		bootDiskSizeGb: 40
 		zones: zones
 	}
+
+	meta {
+		description: "Merges sample-level AnnData objects to a single cohort-level AnnData object and generates pre-filtering QC violin plots for key metrics."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		preprocessed_adata_objects: {help: "An array of preprocessed AnnData objects to run cohort analysis on."}
+		raw_data_path: {help: "Raw data bucket path for merged adata and QC plots outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task filter {
@@ -407,6 +460,21 @@ task filter {
 		preemptible: 3
 		bootDiskSizeGb: 40
 		zones: zones
+	}
+
+	meta {
+		description: "Filters low-quality cells from the merged AnnData object based on mitochondrial content, doublet score, total UMI counts, and number of detected genes."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		merged_adata_object: {help: "Merged AnnData object."}
+		pct_counts_mt_max: {help: "Maximum percentage of mitochondrial gene counts allowed per cell. [10]"}
+		doublet_score_max: {help: "Maximum doublet detection score threshold. [0.2]"}
+		total_counts_limits: {help: "Minimum and maximum total UMI (unique molecular identifier) counts per cell. [100, 100000]"}
+		n_genes_by_counts_limits: {help: "Minimum and maximum number of genes detected per cell (genes with at least one count). [100, 10000]"}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }
 
@@ -468,6 +536,22 @@ task map_cell_types {
 		preemptible: 3
 		bootDiskSizeGb: 40
 		zones: zones
+	}
+
+	meta {
+		description: "Assigns cell type labels using the Allen Brain Cell Atlas MapMyCells (MMC) tool. Uses on-the-fly (SEAAD) mapping for human data or marker-gene-based mapping for mouse data when a marker genes JSON is provided."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		filtered_adata_object: {help: "QC-filtered AnnData object."}
+		allen_brain_mmc_precomputed_stats_h5: {help: "A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy)."}
+		allen_brain_mmc_marker_genes_json: {help: "A text file that contains the JSON serialization of a dict file from the Allen Brain Cell Atlas specifying which marker genes to use at which node in the cell type taxonomy. Currently, only used when processing mouse data."}
+		raw_data_path: {help: "Raw data bucket path for outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }
 
@@ -533,6 +617,24 @@ task normalize {
 		bootDiskSizeGb: 40
 		zones: zones
 	}
+
+	meta {
+		description: "Normalizes counts per cell, selects highly variable genes, and computes PCA on the filtered AnnData object."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		filtered_adata_object: {help: "QC-filtered AnnData object."}
+		norm_target_sum: {help: "The total count value that each cell will be normalized to. [10000]"}
+		n_top_genes: {help: "Number of HVG genes to keep. [8000]"}
+		n_comps: {help: "Number of principal components to compute. [30]"}
+		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		raw_data_path: {help: "Raw data bucket path for outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task add_mapped_cell_types {
@@ -583,6 +685,21 @@ task add_mapped_cell_types {
 		preemptible: 3
 		bootDiskSizeGb: 40
 		zones: zones
+	}
+
+	meta {
+		description: "Joins MMC cell type mapping results onto the normalized AnnData object and exports a Parquet summary of per-cell type assignments."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		normalized_adata_object: {help: "Normalized AnnData object to annotate with cell type labels."}
+		mmc_results_csv: {help: "Cell type mapping results CSV produced by map_cell_types."}
+		raw_data_path: {help: "Raw data bucket path for outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }
 
@@ -639,6 +756,21 @@ task integrate_harmony {
 		gpuCount: 1
 		nvidiaDriverVersion: "545.23.08" #!UnknownRuntimeKey
 	}
+
+	meta {
+		description: "Runs Harmony batch correction on the UMAP-clustered AnnData object and exports the final integrated object with cell metadata."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		umap_clustered_adata_object: {help: "UMAP-clustered AnnData object from cluster_data."}
+		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		raw_data_path: {help: "Raw data bucket path for outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task artifact_metrics {
@@ -692,6 +824,22 @@ task artifact_metrics {
 		disks: "local-disk ~{disk_size} HDD"
 		bootDiskSizeGb: 40
 		zones: zones
+	}
+
+	meta {
+		description: "Computes scib-metrics integration quality scores on the final AnnData object and exports results as a CSV report and SVG visualization."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		final_adata_object: {help: "Final Harmony-integrated AnnData object."}
+		scanvi_predictions_key: {help: "scANVI cell type predictions column name. ['C_scANVI']"}
+		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		raw_data_path: {help: "Raw data bucket path for outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }
 
@@ -747,5 +895,21 @@ task plot_groups_and_features {
 		preemptible: 3
 		bootDiskSizeGb: 40
 		zones: zones
+	}
+
+	meta {
+		description: "Generates UMAP plots colored by cell metadata groups and gene expression features from the final integrated AnnData object."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		final_adata_object: {help: "Final integrated AnnData object."}
+		groups: {help: "Groups to produce umap plots for. ['sample', 'batch', 'cell_type', 'leiden_res_0.05', 'leiden_res_0.10', 'leiden_res_0.20', 'leiden_res_0.40']"}
+		features: {help: "Features to produce umap plots for. ['n_genes_by_counts', 'total_counts', 'pct_counts_mt', 'pct_counts_rb', 'doublet_score', 'S_score', 'G2M_score']"}
+		raw_data_path: {help: "Raw data bucket path for outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }
