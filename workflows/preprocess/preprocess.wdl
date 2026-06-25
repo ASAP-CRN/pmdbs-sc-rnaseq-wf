@@ -27,7 +27,7 @@ workflow preprocess {
 
 	# Task and subworkflow versions
 	String sub_workflow_name = "preprocess"
-	String cellranger_task_version = "1.1.0"
+	String cellranger_task_version = "2.0.0"
 	String cellbender_task_version = "1.0.0"
 	String adata_task_version = "1.1.0"
 
@@ -331,7 +331,7 @@ task cellranger_count {
 	}
 
 	runtime {
-		docker: "~{container_registry}/cellranger:7.1.0"
+		docker: "~{container_registry}/cellranger:10.0.0"
 		cpu: threads
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
