@@ -93,10 +93,13 @@ workflow sc_rnaseq_analysis {
 		}
 
 		Array[String] preprocessing_output_file_paths = flatten([
+			preprocess.sc_rnaseq_outputs_tar_gz,
 			preprocess.raw_counts,
 			preprocess.filtered_counts,
 			preprocess.molecule_info,
 			preprocess.metrics_summary_csv,
+			preprocess.possorted_genome_bam,
+			preprocess.possorted_genome_bam_index,
 			preprocess.report_html,
 			preprocess.removed_background_counts,
 			preprocess.filtered_removed_background_counts,
@@ -191,10 +194,13 @@ workflow sc_rnaseq_analysis {
 		Array[Array[Array[String]]] project_sample_ids = preprocess.project_sample_ids
 
 		# Cellranger
+		Array[Array[File]] cellranger_sc_rnaseq_outputs_tar_gz = preprocess.sc_rnaseq_outputs_tar_gz
 		Array[Array[File]] cellranger_raw_counts = preprocess.raw_counts
 		Array[Array[File]] cellranger_filtered_counts = preprocess.filtered_counts
 		Array[Array[File]] cellranger_molecule_info = preprocess.molecule_info
 		Array[Array[File]] cellranger_metrics_summary_csv = preprocess.metrics_summary_csv
+		Array[Array[File]] cellranger_possorted_genome_bam = preprocess.possorted_genome_bam
+		Array[Array[File]] cellranger_possorted_genome_bam_index = preprocess.possorted_genome_bam_index
 
 		# Preprocess
 		Array[Array[File]] cellbender_report_html = preprocess.report_html

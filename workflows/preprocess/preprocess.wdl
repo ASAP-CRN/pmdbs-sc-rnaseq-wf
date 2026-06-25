@@ -63,10 +63,13 @@ workflow preprocess {
 		String cellbender_remove_background_complete = check_output_files_exist.sample_preprocessing_complete[index][1]
 		String initial_adata_object_complete = check_output_files_exist.sample_preprocessing_complete[index][2]
 
+		String cellranger_sc_rnaseq_outputs_tar_gz = "~{cellranger_raw_data_path}/~{sample.sample_id}.cellranger_sc_rnaseq_outputs.tar.gz"
 		String cellranger_raw_counts = "~{cellranger_raw_data_path}/~{sample.sample_id}.raw_feature_bc_matrix.h5"
 		String cellranger_filtered_counts = "~{cellranger_raw_data_path}/~{sample.sample_id}.filtered_feature_bc_matrix.h5"
 		String cellranger_molecule_info = "~{cellranger_raw_data_path}/~{sample.sample_id}.molecule_info.h5"
 		String cellranger_metrics_summary_csv = "~{cellranger_raw_data_path}/~{sample.sample_id}.metrics_summary.csv"
+		String cellranger_possorted_genome_bam = "~{cellranger_raw_data_path}/~{sample.sample_id}.possorted_genome_bam.bam"
+		String cellranger_possorted_genome_bam_index = "~{cellranger_raw_data_path}/~{sample.sample_id}.possorted_genome_bam.bam.bai"
 
 		if (cellranger_count_complete == "false") {
 			call cellranger_count {
@@ -86,10 +89,13 @@ workflow preprocess {
 			}
 		}
 
+		File sc_rnaseq_outputs_tar_gz_output = select_first([cellranger_count.sc_rnaseq_outputs_tar_gz, cellranger_sc_rnaseq_outputs_tar_gz]) #!FileCoercion
 		File raw_counts_output = select_first([cellranger_count.raw_counts, cellranger_raw_counts]) #!FileCoercion
 		File filtered_counts_output = select_first([cellranger_count.filtered_counts, cellranger_filtered_counts]) #!FileCoercion
 		File molecule_info_output = select_first([cellranger_count.molecule_info, cellranger_molecule_info]) #!FileCoercion
 		File metrics_summary_csv_output = select_first([cellranger_count.metrics_summary_csv, cellranger_metrics_summary_csv]) #!FileCoercion
+		File possorted_genome_bam_output = select_first([cellranger_count.possorted_genome_bam, cellranger_possorted_genome_bam]) #!FileCoercion
+		File possorted_genome_bam_index_output = select_first([cellranger_count.possorted_genome_bam_index, cellranger_possorted_genome_bam_index]) #!FileCoercion
 
 		String cellbender_report_html = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender_report.html"
 		String cellbender_removed_background_counts = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender.h5"
@@ -149,10 +155,13 @@ workflow preprocess {
 		Array[Array[String]] project_sample_ids = project_sample_id
 
 		# Cellranger
+		Array[File] sc_rnaseq_outputs_tar_gz = sc_rnaseq_outputs_tar_gz_output #!FileCoercion
 		Array[File] raw_counts = raw_counts_output #!FileCoercion
 		Array[File] filtered_counts = filtered_counts_output #!FileCoercion
 		Array[File] molecule_info = molecule_info_output #!FileCoercion
 		Array[File] metrics_summary_csv = metrics_summary_csv_output #!FileCoercion
+		Array[File] possorted_genome_bam = possorted_genome_bam_output #!FileCoercion
+		Array[File] possorted_genome_bam_index = possorted_genome_bam_index_output #!FileCoercion
 
 		# Remove technical artifacts - Cellbender
 		Array[File] report_html = report_html_output
@@ -303,31 +312,44 @@ task cellranger_count {
 			--id=~{sample_id} \
 			--transcriptome="$(pwd)/cellranger_refdata" \
 			--fastqs="$(pwd)/fastqs" \
+			--create-bam=true \
 			--localcores ~{threads} \
 			--localmem ~{mem_gb - 4} \
 			~{cellranger_arc_chemistry_flag}
+
+		# Save Cell Ranger outs
+		cp -r ~{sample_id}/outs sc_rnaseq_outputs
+		tar -czvf "~{sample_id}.cellranger_sc_rnaseq_outputs.tar.gz" sc_rnaseq_outputs
 
 		# Rename outputs to include sample ID
 		mv ~{sample_id}/outs/raw_feature_bc_matrix.h5 ~{sample_id}.raw_feature_bc_matrix.h5
 		mv ~{sample_id}/outs/filtered_feature_bc_matrix.h5 ~{sample_id}.filtered_feature_bc_matrix.h5
 		mv ~{sample_id}/outs/molecule_info.h5 ~{sample_id}.molecule_info.h5
 		mv ~{sample_id}/outs/metrics_summary.csv ~{sample_id}.metrics_summary.csv
+		mv ~{sample_id}/outs/possorted_genome_bam.bam ~{sample_id}.possorted_genome_bam.bam
+		mv ~{sample_id}/outs/possorted_genome_bam.bam.bai ~{sample_id}.possorted_genome_bam.bam.bai
 
 		upload_outputs \
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
+			-o "~{sample_id}.cellranger_sc_rnaseq_outputs.tar.gz" \
 			-o "~{sample_id}.raw_feature_bc_matrix.h5" \
 			-o "~{sample_id}.filtered_feature_bc_matrix.h5" \
 			-o "~{sample_id}.molecule_info.h5" \
-			-o "~{sample_id}.metrics_summary.csv"
+			-o "~{sample_id}.metrics_summary.csv" \
+			-o "~{sample_id}.possorted_genome_bam.bam" \
+			-o "~{sample_id}.possorted_genome_bam.bam.bai"
 	>>>
 
 	output {
+		String sc_rnaseq_outputs_tar_gz = "~{raw_data_path}/~{sample_id}.cellranger_sc_rnaseq_outputs.tar.gz"
 		String raw_counts = "~{raw_data_path}/~{sample_id}.raw_feature_bc_matrix.h5"
 		String filtered_counts = "~{raw_data_path}/~{sample_id}.filtered_feature_bc_matrix.h5"
 		String molecule_info = "~{raw_data_path}/~{sample_id}.molecule_info.h5"
 		String metrics_summary_csv = "~{raw_data_path}/~{sample_id}.metrics_summary.csv"
+		String possorted_genome_bam = "~{raw_data_path}/~{sample_id}.possorted_genome_bam.bam"
+		String possorted_genome_bam_index = "~{raw_data_path}/~{sample_id}.possorted_genome_bam.bam.bai"
 	}
 
 	runtime {

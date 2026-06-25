@@ -211,10 +211,13 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${cohort_id}.groups.umap.png
             │   └── MANIFEST.tsv
             ├── preprocess
+            │   ├── ${sampleA_id}.cellranger_sc_rnaseq_outputs.tar.gz
             │   ├── ${sampleA_id}.filtered_feature_bc_matrix.h5
             │   ├── ${sampleA_id}.metrics_summary.csv
             │   ├── ${sampleA_id}.molecule_info.h5
             │   ├── ${sampleA_id}.raw_feature_bc_matrix.h5
+            │   ├── ${sampleA_id}.possorted_genome_bam.bam
+            │   ├── ${sampleA_id}.possorted_genome_bam.bam.bai
             │   ├── ${sampleA_id}.cellbender_report.html
             │   ├── ${sampleA_id}.cellbender_metrics.csv
             │   ├── ${sampleA_id}.cellbender_filtered.h5
@@ -225,10 +228,13 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${sampleA_id}.cellbender.h5
             │   ├── ${sampleA_id}.cellbender_posterior.h5
             │   ├── ${sampleA_id}.cleaned_unfiltered.h5ad
+            │   ├── ${sampleB_id}.cellranger_sc_rnaseq_outputs.tar.gz
             │   ├── ${sampleB_id}.filtered_feature_bc_matrix.h5
             │   ├── ${sampleB_id}.metrics_summary.csv
             │   ├── ${sampleB_id}.molecule_info.h5
             │   ├── ${sampleB_id}.raw_feature_bc_matrix.h5
+            │   ├── ${sampleB_id}.possorted_genome_bam.bam
+            │   ├── ${sampleB_id}.possorted_genome_bam.bam.bai
             │   ├── ${sampleB_id}.cellbender_report.html
             │   ├── ${sampleB_id}.cellbender_metrics.csv
             │   ├── ${sampleB_id}.cellbender_filtered.h5
@@ -240,10 +246,13 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${sampleB_id}.cellbender_posterior.h5
             │   ├── ${sampleB_id}.cleaned_unfiltered.h5ad
             │   ├── ...
+            │   ├── ${sampleN_id}.cellranger_sc_rnaseq_outputs.tar.gz
             │   ├── ${sampleN_id}.filtered_feature_bc_matrix.h5
             │   ├── ${sampleN_id}.metrics_summary.csv
             │   ├── ${sampleN_id}.molecule_info.h5
             │   ├── ${sampleN_id}.raw_feature_bc_matrix.h5
+            │   ├── ${sampleN_id}.possorted_genome_bam.bam
+            │   ├── ${sampleN_id}.possorted_genome_bam.bam.bai
             │   ├── ${sampleN_id}.cellbender_report.html
             │   ├── ${sampleN_id}.cellbender_metrics.csv
             │   ├── ${sampleN_id}.cellbender_filtered.h5
@@ -349,7 +358,7 @@ Docker images can be build using the [`build_docker_images`](https://github.com/
 | Image | Major tool versions | Links |
 | :- | :- | :- |
 | cellbender | <ul><li>[cellbender v0.3.0](https://github.com/broadinstitute/CellBender/releases/tag/v0.3.0)</li><li>[google-cloud-cli 397.0.0](https://cloud.google.com/sdk/docs/release-notes#39700_2022-08-09)</li><li>[python 3.7.16](https://www.python.org/downloads/release/python-3716/)</li><li>[miniconda 23.1.0](https://docs.anaconda.com/miniconda/miniconda-release-notes/)</li><li>[cuda 11.4.0](https://developer.nvidia.com/cuda-11-4-0-download-archive)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/cellbender) |
-| cellranger | <ul><li>[cellranger v7.1.0](https://www.10xgenomics.com/support/software/cell-ranger/latest/release-notes/cr-release-notes#v7-1-0)</li><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/cellranger) |
+| cellranger | <ul><li>[cellranger v10.0.0](https://www.10xgenomics.com/support/software/cell-ranger/latest/release-notes/cr-release-notes#v10-0-0)</li><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/cellranger) |
 | sc_tools | <ul><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li><li>[python 3.10.12](https://www.python.org/downloads/release/python-31012/)</li><li>[torch 2.6.0](https://github.com/pytorch/pytorch/releases/tag/v2.6.0)</li></ul> Python libraries: <ul><li>[scvi-tools 1.3.2](https://github.com/scverse/scvi-tools/releases/tag/1.3.2)</li><li>argparse 1.4.0</li><li>[scanpy 1.11.3](https://scanpy.readthedocs.io/en/stable/release-notes/index.html#v1-11-3)</li><li>muon 0.1.7</li><li>tables 3.10.1</li><li>scrublet 0.2.3</li><li>[scikit-learn 1.7.0](https://github.com/scikit-learn/scikit-learn/releases/tag/1.7.0)</li><li>[harmonypy 0.0.10](https://github.com/slowkow/harmonypy/releases/tag/v0.0.10)</li><li>[scib-metrics 0.5.6](https://github.com/YosefLab/scib-metrics/releases/tag/v0.5.6)</li><li>[cell_type_mapper 1.5.3](https://github.com/AllenInstitute/cell_type_mapper/releases/tag/v1.5.3)</li></ul>| [Dockerfile](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/sc_tools) |
 | util | <ul><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/wf-common/tree/main/docker/util) |
 | DEPRECATED - multiome | <ul><li>[google-cloud-cli 444.0.0](https://cloud.google.com/sdk/docs/release-notes#44400_2023-08-22)</li><li>[multiome seuratv4 environment](https://github.com/shahrozeabbas/Multiome-SeuratV4/tree/main)</li><li>[R scripts](https://github.com/shahrozeabbas/Harmony-RNA-Workflow/tree/main/scripts)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/multiome) |
@@ -369,7 +378,7 @@ In general, `wdl-ci` will use inputs provided in the [wdl-ci.config.json](./wdl-
 
 | Genome | Cell Ranger reference | Link |
 | :- | :- | :- |
-| Human GRCh38 (GENCODE v32/Ensembl98 annotations) | 2020-A | https://www.10xgenomics.com/support/software/cell-ranger/latest/release-notes/cr-reference-release-notes#2020-a |
+| Human GRCh38 (GENCODE v44/Ensembl110 annotations) | 2024-A | https://www.10xgenomics.com/support/software/cell-ranger/latest/release-notes/cr-reference-release-notes#2024-a |
 | Mouse GRCm39 (GENCODE vM33/Ensembl110 annotations) | 2024-A | https://www.10xgenomics.com/support/software/cell-ranger/latest/release-notes/cr-reference-release-notes#2024-a |
 
 ### Allen Brain Institute's MapMyCells references
