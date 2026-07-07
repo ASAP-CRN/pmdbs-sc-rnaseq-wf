@@ -3,6 +3,7 @@ version 1.0
 struct Sample {
 	String sample_id
 	String? batch
+	String? sex
 
 	Array[File]+ fastq_R1s
 	Array[File]+ fastq_R2s
