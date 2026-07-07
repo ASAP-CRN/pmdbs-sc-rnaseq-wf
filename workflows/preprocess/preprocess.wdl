@@ -246,6 +246,7 @@ task check_output_files_exist {
 	runtime {
 		docker: "gcr.io/google.com/cloudsdktool/google-cloud-cli:524.0.0-slim"
 		cpu: 2
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "4 GB"
 		disks: "local-disk 20 HDD"
 		preemptible: 3
@@ -356,6 +357,7 @@ task cellranger_count {
 	runtime {
 		docker: "~{container_registry}/cellranger:10.0.0"
 		cpu: threads
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -512,6 +514,7 @@ task counts_to_adata {
 	runtime {
 		docker: "~{container_registry}/sc_tools:1.2.0"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "32 GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -526,6 +529,7 @@ task counts_to_adata {
 	parameter_meta {
 		sample_id: {help: "Generated ASAP sample ID; stored in the AnnData objects and used to name output files."}
 		batch: {help: "The sample's batch; stored in the AnnData objects."}
+		sex: {help: "The sample's sex; stored in the AnnData objects."}
 		team_id: {help: "Name of the CRN Team; stored in the AnnData objects."}
 		dataset_id: {help: "Generated ASAP dataset ID; stored in the AnnData objects."}
 		cellbender_counts: {help: "CellBender-cleaned count matrix (H5 format)."}

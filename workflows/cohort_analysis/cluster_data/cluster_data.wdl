@@ -293,6 +293,7 @@ task cluster_cells {
 	runtime {
 		docker: "~{container_registry}/sc_tools:1.2.0"
 		cpu: 16
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
