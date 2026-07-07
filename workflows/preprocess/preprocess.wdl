@@ -136,6 +136,7 @@ workflow preprocess {
 				input:
 					sample_id = sample.sample_id,
 					batch = select_first([sample.batch]),
+					sex = select_first([sample.sex]),
 					team_id = team_id,
 					dataset_id = dataset_id,
 					cellbender_counts = removed_background_counts_output,
@@ -469,6 +470,7 @@ task counts_to_adata {
 	input {
 		String sample_id
 		String batch
+		String sex
 
 		String team_id
 		String dataset_id
@@ -491,6 +493,7 @@ task counts_to_adata {
 			--adata-input ~{cellbender_counts} \
 			--sample-id ~{sample_id} \
 			--batch ~{batch} \
+			--sex ~{sex} \
 			--team ~{team_id} \
 			--dataset ~{dataset_id} \
 			--adata-output ~{sample_id}.cleaned_unfiltered.h5ad
@@ -507,7 +510,7 @@ task counts_to_adata {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.0"
 		cpu: 4
 		memory: "32 GB"
 		disks: "local-disk ~{disk_size} HDD"

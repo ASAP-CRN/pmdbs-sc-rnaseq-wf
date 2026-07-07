@@ -394,7 +394,7 @@ task merge_and_plot_qc_metrics {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.0"
 		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -453,7 +453,7 @@ task filter {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.0"
 		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -529,7 +529,7 @@ task map_cell_types {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.0"
 		cpu: threads
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -608,7 +608,7 @@ task normalize {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.0"
 		cpu: threads
 		cpuPlatform: "AMD Rome"
 		memory: "~{mem_gb} GB"
@@ -678,7 +678,7 @@ task add_mapped_cell_types {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.0"
 		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -745,7 +745,7 @@ task integrate_harmony {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.0"
 		cpu: 8
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -818,7 +818,7 @@ task artifact_metrics {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.0"
 		cpu: 16
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -888,7 +888,7 @@ task plot_groups_and_features {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.0"
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
