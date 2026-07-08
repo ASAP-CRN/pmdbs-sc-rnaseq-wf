@@ -39,9 +39,9 @@ workflow preprocess {
 	String adata_raw_data_path = "~{workflow_raw_data_path_prefix}/counts_to_adata/~{adata_task_version}"
 
 	scatter (sample_object in samples) {
-		String cellranger_count_output = "~{cellranger_raw_data_path}/~{sample_object.sample_id}.raw_feature_bc_matrix.h5"
-		String cellbender_count_output = "~{cellbender_raw_data_path}/~{sample_object.sample_id}.cellbender.h5"
-		String initial_adata_object_output = "~{adata_raw_data_path}/~{sample_object.sample_id}.cleaned_unfiltered.h5ad"
+		String cellranger_count_output = "~{cellranger_raw_data_path}/~{dataset_id}.~{sample_object.sample_id}.raw_feature_bc_matrix.h5"
+		String cellbender_count_output = "~{cellbender_raw_data_path}/~{dataset_id}.~{sample_object.sample_id}.cellbender.h5"
+		String initial_adata_object_output = "~{adata_raw_data_path}/~{dataset_id}.~{sample_object.sample_id}.cleaned_unfiltered.h5ad"
 	}
 
 	# For each sample, outputs an array of true/false: [cellranger_counts_complete, remove_technical_artifacts_complete, initial_adata_object_complete]
@@ -63,17 +63,18 @@ workflow preprocess {
 		String cellbender_remove_background_complete = check_output_files_exist.sample_preprocessing_complete[index][1]
 		String initial_adata_object_complete = check_output_files_exist.sample_preprocessing_complete[index][2]
 
-		String cellranger_sc_rnaseq_outputs_tar_gz = "~{cellranger_raw_data_path}/~{sample.sample_id}.cellranger_sc_rnaseq_outputs.tar.gz"
-		String cellranger_raw_counts = "~{cellranger_raw_data_path}/~{sample.sample_id}.raw_feature_bc_matrix.h5"
-		String cellranger_filtered_counts = "~{cellranger_raw_data_path}/~{sample.sample_id}.filtered_feature_bc_matrix.h5"
-		String cellranger_molecule_info = "~{cellranger_raw_data_path}/~{sample.sample_id}.molecule_info.h5"
-		String cellranger_metrics_summary_csv = "~{cellranger_raw_data_path}/~{sample.sample_id}.metrics_summary.csv"
-		String cellranger_possorted_genome_bam = "~{cellranger_raw_data_path}/~{sample.sample_id}.possorted_genome_bam.bam"
-		String cellranger_possorted_genome_bam_index = "~{cellranger_raw_data_path}/~{sample.sample_id}.possorted_genome_bam.bam.bai"
+		String cellranger_sc_rnaseq_outputs_tar_gz = "~{cellranger_raw_data_path}/~{dataset_id}.~{sample.sample_id}.cellranger_sc_rnaseq_outputs.tar.gz"
+		String cellranger_raw_counts = "~{cellranger_raw_data_path}/~{dataset_id}.~{sample.sample_id}.raw_feature_bc_matrix.h5"
+		String cellranger_filtered_counts = "~{cellranger_raw_data_path}/~{dataset_id}.~{sample.sample_id}.filtered_feature_bc_matrix.h5"
+		String cellranger_molecule_info = "~{cellranger_raw_data_path}/~{dataset_id}.~{sample.sample_id}.molecule_info.h5"
+		String cellranger_metrics_summary_csv = "~{cellranger_raw_data_path}/~{dataset_id}.~{sample.sample_id}.metrics_summary.csv"
+		String cellranger_possorted_genome_bam = "~{cellranger_raw_data_path}/~{dataset_id}.~{sample.sample_id}.possorted_genome_bam.bam"
+		String cellranger_possorted_genome_bam_index = "~{cellranger_raw_data_path}/~{dataset_id}.~{sample.sample_id}.possorted_genome_bam.bam.bai"
 
 		if (cellranger_count_complete == "false") {
 			call cellranger_count {
 				input:
+					dataset_id = dataset_id,
 					sample_id = sample.sample_id,
 					fastq_R1s = sample.fastq_R1s,
 					fastq_R2s = sample.fastq_R2s,
@@ -97,18 +98,19 @@ workflow preprocess {
 		File possorted_genome_bam_output = select_first([cellranger_count.possorted_genome_bam, cellranger_possorted_genome_bam]) #!FileCoercion
 		File possorted_genome_bam_index_output = select_first([cellranger_count.possorted_genome_bam_index, cellranger_possorted_genome_bam_index]) #!FileCoercion
 
-		String cellbender_report_html = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender_report.html"
-		String cellbender_removed_background_counts = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender.h5"
-		String cellbender_filtered_removed_background_counts = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender_filtered.h5"
-		String cellbender_cell_barcodes_csv = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender_cell_barcodes.csv"
-		String cellbender_graph_pdf = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender.pdf"
-		String cellbender_log = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender.log"
-		String cellbender_metrics_csv = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbender_metrics.csv"
-		String cellbender_posterior_probability = "~{cellbender_raw_data_path}/~{sample.sample_id}.cellbend_posterior.h5"
+		String cellbender_report_html = "~{cellbender_raw_data_path}/~{dataset_id}.~{sample.sample_id}.cellbender_report.html"
+		String cellbender_removed_background_counts = "~{cellbender_raw_data_path}/~{dataset_id}.~{sample.sample_id}.cellbender.h5"
+		String cellbender_filtered_removed_background_counts = "~{cellbender_raw_data_path}/~{dataset_id}.~{sample.sample_id}.cellbender_filtered.h5"
+		String cellbender_cell_barcodes_csv = "~{cellbender_raw_data_path}/~{dataset_id}.~{sample.sample_id}.cellbender_cell_barcodes.csv"
+		String cellbender_graph_pdf = "~{cellbender_raw_data_path}/~{dataset_id}.~{sample.sample_id}.cellbender.pdf"
+		String cellbender_log = "~{cellbender_raw_data_path}/~{dataset_id}.~{sample.sample_id}.cellbender.log"
+		String cellbender_metrics_csv = "~{cellbender_raw_data_path}/~{dataset_id}.~{sample.sample_id}.cellbender_metrics.csv"
+		String cellbender_posterior_probability = "~{cellbender_raw_data_path}/~{dataset_id}.~{sample.sample_id}.cellbend_posterior.h5"
 
 		if (cellbender_remove_background_complete == "false") {
 			call remove_technical_artifacts {
 				input:
+					dataset_id = dataset_id,
 					sample_id = sample.sample_id,
 					raw_counts = raw_counts_output,
 					cellbender_fpr = cellbender_fpr,
@@ -129,7 +131,7 @@ workflow preprocess {
 		File metrics_csv_output = select_first([remove_technical_artifacts.metrics_csv, cellbender_metrics_csv]) #!FileCoercion
 		File posterior_probability_output = select_first([remove_technical_artifacts.posterior_probability, cellbender_posterior_probability]) #!FileCoercion
 
-		String preprocessed_adata_object = "~{adata_raw_data_path}/~{sample.sample_id}.cleaned_unfiltered.h5ad"
+		String preprocessed_adata_object = "~{adata_raw_data_path}/~{dataset_id}.~{sample.sample_id}.cleaned_unfiltered.h5ad"
 
 		if (initial_adata_object_complete == "false") {
 			call counts_to_adata {
@@ -256,6 +258,7 @@ task check_output_files_exist {
 
 task cellranger_count {
 	input {
+		String dataset_id
 		String sample_id
 
 		Array[File] fastq_R1s
@@ -311,7 +314,7 @@ task cellranger_count {
 
 		/usr/bin/time \
 		cellranger count \
-			--id=~{sample_id} \
+			--id=~{dataset_id}.~{sample_id} \
 			--transcriptome="$(pwd)/cellranger_refdata" \
 			--fastqs="$(pwd)/fastqs" \
 			--create-bam=true \
@@ -320,38 +323,38 @@ task cellranger_count {
 			~{cellranger_arc_chemistry_flag}
 
 		# Save Cell Ranger outs
-		cp -r ~{sample_id}/outs sc_rnaseq_outputs
-		tar -czvf "~{sample_id}.cellranger_sc_rnaseq_outputs.tar.gz" sc_rnaseq_outputs
+		cp -r ~{dataset_id}.~{sample_id}/outs sc_rnaseq_outputs
+		tar -czvf "~{dataset_id}.~{sample_id}.cellranger_sc_rnaseq_outputs.tar.gz" sc_rnaseq_outputs
 
 		# Rename outputs to include sample ID
-		mv ~{sample_id}/outs/raw_feature_bc_matrix.h5 ~{sample_id}.raw_feature_bc_matrix.h5
-		mv ~{sample_id}/outs/filtered_feature_bc_matrix.h5 ~{sample_id}.filtered_feature_bc_matrix.h5
-		mv ~{sample_id}/outs/molecule_info.h5 ~{sample_id}.molecule_info.h5
-		mv ~{sample_id}/outs/metrics_summary.csv ~{sample_id}.metrics_summary.csv
-		mv ~{sample_id}/outs/possorted_genome_bam.bam ~{sample_id}.possorted_genome_bam.bam
-		mv ~{sample_id}/outs/possorted_genome_bam.bam.bai ~{sample_id}.possorted_genome_bam.bam.bai
+		mv ~{dataset_id}.~{sample_id}/outs/raw_feature_bc_matrix.h5 ~{dataset_id}.~{sample_id}.raw_feature_bc_matrix.h5
+		mv ~{dataset_id}.~{sample_id}/outs/filtered_feature_bc_matrix.h5 ~{dataset_id}.~{sample_id}.filtered_feature_bc_matrix.h5
+		mv ~{dataset_id}.~{sample_id}/outs/molecule_info.h5 ~{dataset_id}.~{sample_id}.molecule_info.h5
+		mv ~{dataset_id}.~{sample_id}/outs/metrics_summary.csv ~{dataset_id}.~{sample_id}.metrics_summary.csv
+		mv ~{dataset_id}.~{sample_id}/outs/possorted_genome_bam.bam ~{dataset_id}.~{sample_id}.possorted_genome_bam.bam
+		mv ~{dataset_id}.~{sample_id}/outs/possorted_genome_bam.bam.bai ~{dataset_id}.~{sample_id}.possorted_genome_bam.bam.bai
 
 		upload_outputs \
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{sample_id}.cellranger_sc_rnaseq_outputs.tar.gz" \
-			-o "~{sample_id}.raw_feature_bc_matrix.h5" \
-			-o "~{sample_id}.filtered_feature_bc_matrix.h5" \
-			-o "~{sample_id}.molecule_info.h5" \
-			-o "~{sample_id}.metrics_summary.csv" \
-			-o "~{sample_id}.possorted_genome_bam.bam" \
-			-o "~{sample_id}.possorted_genome_bam.bam.bai"
+			-o "~{dataset_id}.~{sample_id}.cellranger_sc_rnaseq_outputs.tar.gz" \
+			-o "~{dataset_id}.~{sample_id}.raw_feature_bc_matrix.h5" \
+			-o "~{dataset_id}.~{sample_id}.filtered_feature_bc_matrix.h5" \
+			-o "~{dataset_id}.~{sample_id}.molecule_info.h5" \
+			-o "~{dataset_id}.~{sample_id}.metrics_summary.csv" \
+			-o "~{dataset_id}.~{sample_id}.possorted_genome_bam.bam" \
+			-o "~{dataset_id}.~{sample_id}.possorted_genome_bam.bam.bai"
 	>>>
 
 	output {
-		String sc_rnaseq_outputs_tar_gz = "~{raw_data_path}/~{sample_id}.cellranger_sc_rnaseq_outputs.tar.gz"
-		String raw_counts = "~{raw_data_path}/~{sample_id}.raw_feature_bc_matrix.h5"
-		String filtered_counts = "~{raw_data_path}/~{sample_id}.filtered_feature_bc_matrix.h5"
-		String molecule_info = "~{raw_data_path}/~{sample_id}.molecule_info.h5"
-		String metrics_summary_csv = "~{raw_data_path}/~{sample_id}.metrics_summary.csv"
-		String possorted_genome_bam = "~{raw_data_path}/~{sample_id}.possorted_genome_bam.bam"
-		String possorted_genome_bam_index = "~{raw_data_path}/~{sample_id}.possorted_genome_bam.bam.bai"
+		String sc_rnaseq_outputs_tar_gz = "~{raw_data_path}/~{dataset_id}.~{sample_id}.cellranger_sc_rnaseq_outputs.tar.gz"
+		String raw_counts = "~{raw_data_path}/~{dataset_id}.~{sample_id}.raw_feature_bc_matrix.h5"
+		String filtered_counts = "~{raw_data_path}/~{dataset_id}.~{sample_id}.filtered_feature_bc_matrix.h5"
+		String molecule_info = "~{raw_data_path}/~{dataset_id}.~{sample_id}.molecule_info.h5"
+		String metrics_summary_csv = "~{raw_data_path}/~{dataset_id}.~{sample_id}.metrics_summary.csv"
+		String possorted_genome_bam = "~{raw_data_path}/~{dataset_id}.~{sample_id}.possorted_genome_bam.bam"
+		String possorted_genome_bam_index = "~{raw_data_path}/~{dataset_id}.~{sample_id}.possorted_genome_bam.bam.bai"
 	}
 
 	runtime {
@@ -370,6 +373,7 @@ task cellranger_count {
 	}
 
 	parameter_meta {
+		dataset_id: {help: "Generated ASAP dataset ID; stored in the AnnData objects."}
 		sample_id: {help: "Generated ASAP sample ID; used to name output files."}
 		fastq_R1s: {help: "Sample's read 1 FASTQ file."}
 		fastq_R2s: {help: "Sample's read 2 FASTQ file."}
@@ -387,6 +391,7 @@ task cellranger_count {
 
 task remove_technical_artifacts {
 	input {
+		String dataset_id
 		String sample_id
 
 		File raw_counts
@@ -410,34 +415,34 @@ task remove_technical_artifacts {
 		cellbender remove-background \
 			--cuda \
 			--input ~{raw_counts} \
-			--output ~{sample_id}.cellbender. \
+			--output ~{dataset_id}.~{sample_id}.cellbender. \
 			--fpr ~{cellbender_fpr}
 
-		mv ckpt.tar.gz "~{sample_id}.cellbender_ckpt.tar.gz"
+		mv ckpt.tar.gz "~{dataset_id}.~{sample_id}.cellbender_ckpt.tar.gz"
 
 		upload_outputs \
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{sample_id}.cellbender_report.html" \
-			-o "~{sample_id}.cellbender.h5" \
-			-o "~{sample_id}.cellbender_filtered.h5" \
-			-o "~{sample_id}.cellbender_cell_barcodes.csv" \
-			-o "~{sample_id}.cellbender.pdf" \
-			-o "~{sample_id}.cellbender.log" \
-			-o "~{sample_id}.cellbender_metrics.csv" \
-			-o "~{sample_id}.cellbend_posterior.h5"
+			-o "~{dataset_id}.~{sample_id}.cellbender_report.html" \
+			-o "~{dataset_id}.~{sample_id}.cellbender.h5" \
+			-o "~{dataset_id}.~{sample_id}.cellbender_filtered.h5" \
+			-o "~{dataset_id}.~{sample_id}.cellbender_cell_barcodes.csv" \
+			-o "~{dataset_id}.~{sample_id}.cellbender.pdf" \
+			-o "~{dataset_id}.~{sample_id}.cellbender.log" \
+			-o "~{dataset_id}.~{sample_id}.cellbender_metrics.csv" \
+			-o "~{dataset_id}.~{sample_id}.cellbend_posterior.h5"
 	>>>
 
 	output {
-		String report_html = "~{raw_data_path}/~{sample_id}.cellbender_report.html"
-		String removed_background_counts = "~{raw_data_path}/~{sample_id}.cellbender.h5"
-		String filtered_removed_background_counts = "~{raw_data_path}/~{sample_id}.cellbender_filtered.h5"
-		String cell_barcodes_csv = "~{raw_data_path}/~{sample_id}.cellbender_cell_barcodes.csv"
-		String graph_pdf = "~{raw_data_path}/~{sample_id}.cellbender.pdf"
-		String log = "~{raw_data_path}/~{sample_id}.cellbender.log"
-		String metrics_csv = "~{raw_data_path}/~{sample_id}.cellbender_metrics.csv"
-		String posterior_probability = "~{raw_data_path}/~{sample_id}.cellbend_posterior.h5"
+		String report_html = "~{raw_data_path}/~{dataset_id}.~{sample_id}.cellbender_report.html"
+		String removed_background_counts = "~{raw_data_path}/~{dataset_id}.~{sample_id}.cellbender.h5"
+		String filtered_removed_background_counts = "~{raw_data_path}/~{dataset_id}.~{sample_id}.cellbender_filtered.h5"
+		String cell_barcodes_csv = "~{raw_data_path}/~{dataset_id}.~{sample_id}.cellbender_cell_barcodes.csv"
+		String graph_pdf = "~{raw_data_path}/~{dataset_id}.~{sample_id}.cellbender.pdf"
+		String log = "~{raw_data_path}/~{dataset_id}.~{sample_id}.cellbender.log"
+		String metrics_csv = "~{raw_data_path}/~{dataset_id}.~{sample_id}.cellbender_metrics.csv"
+		String posterior_probability = "~{raw_data_path}/~{dataset_id}.~{sample_id}.cellbend_posterior.h5"
 	}
 
 	runtime {
@@ -457,6 +462,7 @@ task remove_technical_artifacts {
 	}
 
 	parameter_meta {
+		dataset_id: {help: "Generated ASAP dataset ID; stored in the AnnData objects."}
 		sample_id: {help: "Generated ASAP sample ID; used to name output files."}
 		raw_counts: {help: "Raw CellRanger count matrix (H5 format) to process."}
 		cellbender_fpr: {help: "Cellbender false positive rate. [0.0]"}
@@ -498,17 +504,17 @@ task counts_to_adata {
 			--sex ~{sex} \
 			--team ~{team_id} \
 			--dataset ~{dataset_id} \
-			--adata-output ~{sample_id}.cleaned_unfiltered.h5ad
+			--adata-output ~{dataset_id}.~{sample_id}.cleaned_unfiltered.h5ad
 
 		upload_outputs \
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{sample_id}.cleaned_unfiltered.h5ad"
+			-o "~{dataset_id}.~{sample_id}.cleaned_unfiltered.h5ad"
 	>>>
 
 	output {
-		String initial_adata_object = "~{raw_data_path}/~{sample_id}.cleaned_unfiltered.h5ad"
+		String initial_adata_object = "~{raw_data_path}/~{dataset_id}.~{sample_id}.cleaned_unfiltered.h5ad"
 	}
 
 	runtime {
