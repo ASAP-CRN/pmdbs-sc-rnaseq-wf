@@ -358,7 +358,7 @@ task cellranger_count {
 	}
 
 	runtime {
-		docker: "~{container_registry}/cellranger:10.0.0"
+		docker: "~{container_registry}/cellranger:10.1.0"
 		cpu: threads
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
