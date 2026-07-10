@@ -363,7 +363,6 @@ task cellranger_count {
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		preemptible: 3
 		bootDiskSizeGb: 40
 		zones: zones
 	}
