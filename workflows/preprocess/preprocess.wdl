@@ -314,7 +314,7 @@ task cellranger_count {
 
 		/usr/bin/time \
 		cellranger count \
-			--id=~{dataset_id}.~{sample_id} \
+			--id=~{sample_id} \
 			--transcriptome="$(pwd)/cellranger_refdata" \
 			--fastqs="$(pwd)/fastqs" \
 			--create-bam=true \
@@ -323,16 +323,16 @@ task cellranger_count {
 			~{cellranger_arc_chemistry_flag}
 
 		# Save Cell Ranger outs
-		cp -r ~{dataset_id}.~{sample_id}/outs sc_rnaseq_outputs
+		cp -r ~{sample_id}/outs sc_rnaseq_outputs
 		tar -czvf "~{dataset_id}.~{sample_id}.cellranger_sc_rnaseq_outputs.tar.gz" sc_rnaseq_outputs
 
 		# Rename outputs to include sample ID
-		mv ~{dataset_id}.~{sample_id}/outs/raw_feature_bc_matrix.h5 ~{dataset_id}.~{sample_id}.raw_feature_bc_matrix.h5
-		mv ~{dataset_id}.~{sample_id}/outs/filtered_feature_bc_matrix.h5 ~{dataset_id}.~{sample_id}.filtered_feature_bc_matrix.h5
-		mv ~{dataset_id}.~{sample_id}/outs/molecule_info.h5 ~{dataset_id}.~{sample_id}.molecule_info.h5
-		mv ~{dataset_id}.~{sample_id}/outs/metrics_summary.csv ~{dataset_id}.~{sample_id}.metrics_summary.csv
-		mv ~{dataset_id}.~{sample_id}/outs/possorted_genome_bam.bam ~{dataset_id}.~{sample_id}.possorted_genome_bam.bam
-		mv ~{dataset_id}.~{sample_id}/outs/possorted_genome_bam.bam.bai ~{dataset_id}.~{sample_id}.possorted_genome_bam.bam.bai
+		mv ~{sample_id}/outs/raw_feature_bc_matrix.h5 ~{dataset_id}.~{sample_id}.raw_feature_bc_matrix.h5
+		mv ~{sample_id}/outs/filtered_feature_bc_matrix.h5 ~{dataset_id}.~{sample_id}.filtered_feature_bc_matrix.h5
+		mv ~{sample_id}/outs/molecule_info.h5 ~{dataset_id}.~{sample_id}.molecule_info.h5
+		mv ~{sample_id}/outs/metrics_summary.csv ~{dataset_id}.~{sample_id}.metrics_summary.csv
+		mv ~{sample_id}/outs/possorted_genome_bam.bam ~{dataset_id}.~{sample_id}.possorted_genome_bam.bam
+		mv ~{sample_id}/outs/possorted_genome_bam.bam.bai ~{dataset_id}.~{sample_id}.possorted_genome_bam.bam.bai
 
 		upload_outputs \
 			-b ~{billing_project} \
