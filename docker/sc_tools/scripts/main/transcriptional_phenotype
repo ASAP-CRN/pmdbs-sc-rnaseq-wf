@@ -49,7 +49,7 @@ def summarize_mmc_results(mmc_results: pd.DataFrame, workflow_name: str):
     # First get "classes"
     # Define row indices for each class
     # HUMAN
-    if workflow_name == "pmdbs_sc_rnaseq":
+    if workflow_name in ("pmdbs_sc_rnaseq", "pmdbs_sc_multiome"):
         gabaergic = mmc_results["class_name"] == "Neuronal: GABAergic"
         glutamatergic = mmc_results["class_name"] == "Neuronal: Glutamatergic"
         non_neuronal = mmc_results["class_name"] == "Non-neuronal and Non-neural"
