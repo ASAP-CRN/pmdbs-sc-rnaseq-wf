@@ -456,6 +456,7 @@
           "tests": [
             {
               "inputs": {
+                "dataset_id": "${dataset_id}",
                 "sample_id": "${sample_id}",
                 "fastq_R1s": [
                   "gs://asap-wdl-ci/subset_fastqs/team-jakobsson/subset_10000_ASAP1_PD_NP16-162_SN_R1.fastq.gz"
@@ -514,6 +515,7 @@
           "tests": [
             {
               "inputs": {
+                "dataset_id": "${dataset_id}",
                 "sample_id": "${sample_id}",
                 "raw_counts": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.raw_feature_bc_matrix.h5",
                 "cellbender_fpr": "${cellbender_fpr}",
@@ -595,7 +597,7 @@
                 "sample_id": "${sample_id}",
                 "batch": "1",
                 "team_id": "team-jakobsson",
-                "dataset_id": "DS_PMDBS_0004",
+                "dataset_id": "${dataset_id}",
                 "cellbender_counts": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.cellbender.h5",
                 "raw_data_path": "${adata_raw_data_path}",
                 "workflow_info": "${workflow_info}",
@@ -667,18 +669,6 @@
               }
             }
           ]
-        }
-      }
-    },
-    "wf-common/wdl/tasks/get_workflow_name.wdl": {
-      "key": "wf-common/wdl/tasks/get_workflow_name.wdl",
-      "name": "",
-      "description": "",
-      "tasks": {
-        "validate_workflow_name": {
-          "key": "validate_workflow_name",
-          "digest": "k4n53o3fprjaytzarqscl6w5sjguhx6s",
-          "tests": []
         }
       }
     },
@@ -764,6 +754,7 @@
   },
   "test_params": {
     "global_params": {
+      "dataset_id": "DS_PMDBS_0004",
       "sample_id": "ASAP_PMBDS_000105_s001_1",
       "cohort_id": "asap-cohort",
       "project_sample_ids": [
