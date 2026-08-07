@@ -7,7 +7,7 @@
       "tasks": {
         "merge_and_plot_qc_metrics": {
           "key": "merge_and_plot_qc_metrics",
-          "digest": "7chglartnvqajk42iehe26z5yronb2rb",
+          "digest": "qplewmk2ivv6pwqax44b6cmwxuzsxarl",
           "tests": [
             {
               "inputs": {
@@ -65,7 +65,7 @@
         },
         "filter": {
           "key": "filter",
-          "digest": "rqtyght35idy25mqyr6eefusxv4nc2cv",
+          "digest": "ybg3ricc2w3nmguqzyr7gjayyqakhyjp",
           "tests": [
             {
               "inputs": {
@@ -92,7 +92,7 @@
         },
         "map_cell_types": {
           "key": "map_cell_types",
-          "digest": "xnxfshedip5ibmakivcq6x76j2ekq7up",
+          "digest": "4sqhyuxlzy5mqnxekdcsnaep2bnzogdg",
           "tests": [
             {
               "inputs": {
@@ -134,7 +134,7 @@
         },
         "normalize": {
           "key": "normalize",
-          "digest": "cjpiels4eeaifstmaxgrll5dn4zmpgs6",
+          "digest": "aurpyhwelwf3zdudouajwj4wehqs3koc",
           "tests": [
             {
               "inputs": {
@@ -183,7 +183,7 @@
         },
         "add_mapped_cell_types": {
           "key": "add_mapped_cell_types",
-          "digest": "rt6pza6pu2eopx6sovqnl22ubigcu55i",
+          "digest": "l52couv6whnuqwrs6ss26xyr5btyvfia",
           "tests": [
             {
               "inputs": {
@@ -218,7 +218,7 @@
         },
         "integrate_harmony": {
           "key": "integrate_harmony",
-          "digest": "ncpjro3iihmbxzxgvnsjo6zub6tunnm7",
+          "digest": "ulwa3r6iedjzjwc465jqecauzpjarz6s",
           "tests": [
             {
               "inputs": {
@@ -254,7 +254,7 @@
         },
         "artifact_metrics": {
           "key": "artifact_metrics",
-          "digest": "v4dii54byl5yhqfzxrpp6alizknsnjmw",
+          "digest": "cx5hz7kfpkqh2xd5pr4nqk5skaxdqj2f",
           "tests": [
             {
               "inputs": {
@@ -291,7 +291,7 @@
         },
         "plot_groups_and_features": {
           "key": "plot_groups_and_features",
-          "digest": "bqzcp2lfiauabqf45gmiuhsvjthniiun",
+          "digest": "3zvauq3pbwldwfqxrvqa5agvmayuqxzv",
           "tests": [
             {
               "inputs": {
@@ -335,7 +335,7 @@
       "tasks": {
         "integrate_sample_data": {
           "key": "integrate_sample_data",
-          "digest": "pglnjhvqi72fpr7ozfghzwxjsjc6rgp6",
+          "digest": "vfitchriad3aqujb7yvy7fbn62lpswfz",
           "tests": [
             {
               "inputs": {
@@ -370,7 +370,7 @@
         },
         "assign_remaining_cells": {
           "key": "assign_remaining_cells",
-          "digest": "ns7fvl5yrxxnas3etg55odohsg57knvy",
+          "digest": "2ak2itbzpvyqaqh7yx3keplelbyejdu3",
           "tests": [
             {
               "inputs": {
@@ -414,7 +414,7 @@
         },
         "cluster_cells": {
           "key": "cluster_cells",
-          "digest": "tto6jzuq437hbjzagmsgw6f2uknco2bj",
+          "digest": "a5p6cp54a2qjuvkhkm47bza4dvdfxu44",
           "tests": [
             {
               "inputs": {
@@ -447,12 +447,12 @@
       "tasks": {
         "check_output_files_exist": {
           "key": "check_output_files_exist",
-          "digest": "46jbhyjmiy4vs3fzvdgeojwdtxmwraag",
+          "digest": "lu7uri3qj4pszidvkfmw6ngy5wrvtqzu",
           "tests": []
         },
         "cellranger_count": {
           "key": "cellranger_count",
-          "digest": "2dbsmzluf7j7kifb43haizypembzdzwp",
+          "digest": "oxnp7ekgyogvrmf2oamsa3zml3rslsl4",
           "tests": [
             {
               "inputs": {
@@ -511,7 +511,7 @@
         },
         "remove_technical_artifacts": {
           "key": "remove_technical_artifacts",
-          "digest": "f2ulwvwgf67cd7hgpjjxtly47tqhppgf",
+          "digest": "udblyaxsudyntm347jksmiinjmae6dez",
           "tests": [
             {
               "inputs": {
@@ -590,12 +590,13 @@
         },
         "counts_to_adata": {
           "key": "counts_to_adata",
-          "digest": "4igyc4iemtmjbokl2t23itvue7hgjqd6",
+          "digest": "yehrdjfwnva2w7c627wge2ml53bfmc7q",
           "tests": [
             {
               "inputs": {
                 "sample_id": "${sample_id}",
                 "batch": "1",
+                "sex": "male",
                 "team_id": "team-jakobsson",
                 "dataset_id": "${dataset_id}",
                 "cellbender_counts": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.cellbender.h5",
@@ -632,7 +633,7 @@
       "tasks": {
         "upload_final_outputs": {
           "key": "upload_final_outputs",
-          "digest": "feihjsneaq5czgmso2cfouf4rmq5qmhv",
+          "digest": "xng62jpjiss6cilu4cfpojx5rreurnl3",
           "tests": []
         }
       }
@@ -715,7 +716,7 @@
       "tasks": {
         "fastqc": {
           "key": "fastqc",
-          "digest": "mvp4xorur2jniwnv44pdvi6fbiwfbhjj",
+          "digest": "72ibt7hosz6ph43kqeh2gtflfeyep46l",
           "tests": []
         }
       }
@@ -724,7 +725,13 @@
       "key": "workflows/main.wdl",
       "name": "",
       "description": "",
-      "tasks": {}
+      "tasks": {
+        "get_workflow_name": {
+          "key": "get_workflow_name",
+          "digest": "elu2ma5ibkb4cakfmainrobiwkpy3zls",
+          "tests": []
+        }
+      }
     },
     "sc-rnaseq-wdl-ci-custom-test-dir/check_parquet.wdl": {
       "key": "sc-rnaseq-wdl-ci-custom-test-dir/check_parquet.wdl",
@@ -792,7 +799,7 @@
         ]
       ],
       "workflow_name": "pmdbs_sc_rnaseq",
-      "workflow_version": "v4.0.0",
+      "workflow_version": "v4.1.0",
       "workflow_release": "https://github.com/ASAP-CRN/sc-rnaseq-wf/releases/tag/sc_rnaseq_analysis-~{workflow_version}",
       "workflow_info": [
         [
@@ -807,9 +814,9 @@
       "adata_raw_data_path": "gs://asap-wdl-ci/workflow_execution/${workflow_name}/preprocess/counts_to_adata/1.1.0",
       "preprocess_workflow_name": "preprocess",
       "cohort_raw_data_path": "gs://asap-wdl-ci/workflow_execution/${workflow_name}/${cohort_workflow_name}/${cohort_workflow_version}/${run_timestamp}",
-      "run_timestamp": "2025-07-15T00-00-00Z",
+      "run_timestamp": "2026-08-07T00-00-00Z",
       "cohort_workflow_name": "cohort_analysis",
-      "cohort_workflow_version": "3.0.0",
+      "cohort_workflow_version": "4.0.0",
       "cellbender_fpr": "0.0",
       "pct_counts_mt_max": 10,
       "doublet_score_max": "0.2",
