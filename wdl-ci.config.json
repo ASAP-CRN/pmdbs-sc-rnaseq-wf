@@ -452,7 +452,7 @@
         },
         "cellranger_count": {
           "key": "cellranger_count",
-          "digest": "oxnp7ekgyogvrmf2oamsa3zml3rslsl4",
+          "digest": "7jfxvsmd3xa567yc4egiodkbtll33inx",
           "tests": [
             {
               "inputs": {
