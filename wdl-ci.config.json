@@ -20,7 +20,7 @@
                   "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000001_s002_rep1.cleaned_unfiltered.h5ad",
                   "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000001_s001_rep1.cleaned_unfiltered.h5ad",
                   "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000003_s004_rep1.cleaned_unfiltered.h5ad",
-                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000128_s001_rep1.cleaned_unfiltered.h5ad"
+                  "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_id}.ASAP_PMBDS_000128_s001_rep1.cleaned_unfiltered.h5ad"
                 ],
                 "raw_data_path": "${cohort_raw_data_path}",
                 "workflow_info": "${workflow_info}",
@@ -456,7 +456,7 @@
           "tests": [
             {
               "inputs": {
-                "dataset_id": "${dataset_id}",
+                "dataset_sample_id": "${dataset_sample_id}",
                 "sample_id": "${sample_id}",
                 "fastq_R1s": [
                   "gs://asap-wdl-ci/subset_fastqs/team-jakobsson/subset_10000_ASAP1_PD_NP16-162_SN_R1.fastq.gz"
@@ -476,28 +476,28 @@
               },
               "output_tests": {
                 "raw_counts": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.raw_feature_bc_matrix.h5",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.raw_feature_bc_matrix.h5",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_hdf5"
                   ]
                 },
                 "filtered_counts": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.filtered_feature_bc_matrix.h5",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.filtered_feature_bc_matrix.h5",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_hdf5"
                   ]
                 },
                 "molecule_info": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.molecule_info.h5",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.molecule_info.h5",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_hdf5"
                   ]
                 },
                 "metrics_summary_csv": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.metrics_summary.csv",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.metrics_summary.csv",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_empty_lines",
@@ -517,7 +517,7 @@
               "inputs": {
                 "dataset_sample_id": "${dataset_sample_id}",
                 "sample_id": "${sample_id}",
-                "raw_counts": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.raw_feature_bc_matrix.h5",
+                "raw_counts": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.raw_feature_bc_matrix.h5",
                 "cellbender_fpr": "${cellbender_fpr}",
                 "raw_data_path": "${cellbender_raw_data_path}",
                 "workflow_info": "${workflow_info}",
@@ -594,12 +594,13 @@
           "tests": [
             {
               "inputs": {
+                "dataset_sample_id": "${dataset_sample_id}",
                 "sample_id": "${sample_id}",
                 "batch": "1",
                 "sex": "male",
                 "team_id": "team-jakobsson",
                 "dataset_id": "${dataset_id}",
-                "cellbender_counts": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.cellbender.h5",
+                "cellbender_counts": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.cellbender.h5",
                 "raw_data_path": "${adata_raw_data_path}",
                 "workflow_info": "${workflow_info}",
                 "billing_project": "${billing_project}",
@@ -608,7 +609,7 @@
               },
               "output_tests": {
                 "initial_adata_object": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.cleaned_unfiltered.h5ad",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.cleaned_unfiltered.h5ad",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_hdf5"
