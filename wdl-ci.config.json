@@ -511,7 +511,7 @@
         },
         "remove_technical_artifacts": {
           "key": "remove_technical_artifacts",
-          "digest": "udblyaxsudyntm347jksmiinjmae6dez",
+          "digest": "sjenotp3l2ipbqmlts5hdnwxi62a2y6a",
           "tests": [
             {
               "inputs": {
@@ -590,7 +590,7 @@
         },
         "counts_to_adata": {
           "key": "counts_to_adata",
-          "digest": "yehrdjfwnva2w7c627wge2ml53bfmc7q",
+          "digest": "hhcugoilompkeqicqsbes2py37cp4jyi",
           "tests": [
             {
               "inputs": {
