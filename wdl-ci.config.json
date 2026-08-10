@@ -515,7 +515,7 @@
           "tests": [
             {
               "inputs": {
-                "dataset_id": "${dataset_id}",
+                "dataset_sample_id": "${dataset_sample_id}",
                 "sample_id": "${sample_id}",
                 "raw_counts": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.raw_feature_bc_matrix.h5",
                 "cellbender_fpr": "${cellbender_fpr}",
@@ -527,28 +527,28 @@
               },
               "output_tests": {
                 "report_html": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.cellbender_report.html",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.cellbender_report.html",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_html"
                   ]
                 },
                 "removed_background_counts": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.cellbender.h5",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.cellbender.h5",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_hdf5"
                   ]
                 },
                 "filtered_removed_background_counts": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.cellbender_filtered.h5",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.cellbender_filtered.h5",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_hdf5"
                   ]
                 },
                 "cell_barcodes_csv": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.cellbender_cell_barcodes.csv",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.cellbender_cell_barcodes.csv",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_empty_lines",
@@ -556,20 +556,20 @@
                   ]
                 },
                 "graph_pdf": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.cellbender.pdf",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.cellbender.pdf",
                   "test_tasks": [
                     "compare_file_basename",
                     "pdf_validator"
                   ]
                 },
                 "log": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.cellbender.log",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.cellbender.log",
                   "test_tasks": [
                     "compare_file_basename"
                   ]
                 },
                 "metrics_csv": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.cellbender_metrics.csv",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.cellbender_metrics.csv",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_empty_lines",
@@ -578,7 +578,7 @@
                   ]
                 },
                 "posterior_probability": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.cellbend_posterior.h5",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_sample_id}.cellbend_posterior.h5",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_hdf5"
@@ -763,6 +763,7 @@
     "global_params": {
       "dataset_id": "DS_PMDBS_0004",
       "sample_id": "ASAP_PMBDS_000105_s001_1",
+      "dataset_sample_id": "${dataset_id}.${sample_id}",
       "cohort_id": "asap-cohort",
       "project_sample_ids": [
         [
