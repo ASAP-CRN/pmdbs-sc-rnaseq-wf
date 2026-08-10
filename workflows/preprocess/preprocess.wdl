@@ -411,6 +411,7 @@ task remove_technical_artifacts {
 
 		nvidia-smi
 
+		/usr/bin/time \
 		cellbender remove-background \
 			--cuda \
 			--input ~{raw_counts} \
