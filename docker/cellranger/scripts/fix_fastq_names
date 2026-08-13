@@ -2,8 +2,43 @@
 
 from argparse import ArgumentParser
 import re
-from os.path import basename, dirname, join
+from os.path import basename, dirname, join, lexists
 from glob import glob
+
+
+S_TOKEN = re.compile(
+    r"_S([0-9]+)((?:_L[0-9]{3})?_[IR][1-3]_[0-9]{3}\.(?:fastq|fq)(?:\.gz)?)$"
+)
+
+
+def next_free_name(renamed, outdir):
+    """Bump the S index until the target name is unused in outdir.
+
+    Called once per fastq, so the caller MUST create each file before invoking
+    this for the next one -- otherwise every call sees an empty directory and
+    returns the same name.
+
+    This was discovered after v5.1.0 of the team-cragg-mouse-sn-rnaseq-striatum dataset.
+    Sometimes there are samples that have both biological and technical replicates.
+    """
+    if not lexists(join(outdir, renamed)):
+        return renamed
+
+    match = S_TOKEN.search(renamed)
+    if not match:
+        raise SystemExit(
+            f"{renamed} already exists in {outdir} and its S index could not be "
+            "parsed, so it cannot be incremented. Exiting."
+        )
+
+    index, tail = int(match.group(1)), match.group(2)
+    stem = renamed[: match.start()]
+    while lexists(join(outdir, renamed)):
+        index += 1
+        if index > 999:
+            raise SystemExit(f"Gave up finding a free S index for {renamed}.")
+        renamed = f"{stem}_S{index}{tail}"
+    return renamed
 
 
 def main(args):
@@ -62,7 +97,7 @@ def main(args):
                 # R3 exists, so this R2 should become I2
                 renamed = renamed.replace("_R2_", "_I2_")
 
-    print(renamed)
+    print(next_free_name(renamed, args.outdir))
 
 
 if __name__ == "__main__":
@@ -72,6 +107,7 @@ if __name__ == "__main__":
 
     parser.add_argument("-f", "--fastq", type=str, required=True, help="Path to fastq")
     parser.add_argument("-s", "--sample-id", type=str, required=True, help="Sample ID")
+    parser.add_argument("-o", "--outdir", type=str, required=True, help="Directory the renamed fastq will be written to")
 
     args = parser.parse_args()
     main(args)

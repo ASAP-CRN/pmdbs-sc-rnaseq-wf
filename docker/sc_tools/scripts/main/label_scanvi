@@ -27,7 +27,7 @@ def label_with_scanvi(
     early_stopping_patience = 20
 
     # Set parameters based on numerical instabilities and source
-    if workflow_name == "pmdbs_sc_rnaseq":
+    if workflow_name in ("pmdbs_sc_rnaseq", "pmdbs_sc_multiome"):
         threshold_cells = 3.05e6 # No. of cells in Sep 2025 PMDBS sc cohort (Lee, Hardy, Hafler, Jakobsson, Scherzer)
     elif workflow_name == "mouse_sc_rnaseq":
         threshold_cells = 1e6 # Approx. no. of cells in Dec 2025 Mouse sc cohort (Cragg, Biederer)

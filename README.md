@@ -98,6 +98,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | :- | :- | :- |
 | String | sample_id | ASAP-generated unique identifier combined with the replicate for the sample within the project. |
 | String? | batch | The sample's batch. If unset, the analysis will stop after running `cellranger_count`. |
+| String? | sex | The sample's sex. |
 | File | fastq_R1 | Path to the sample's read 1 FASTQ file. |
 | File | fastq_R2 | Path to the sample's read 2 FASTQ file. |
 | File? | fastq_I1 | Optional fastq index 1. |
@@ -107,11 +108,12 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 The inputs JSON may be generated manually, however when running a large number of samples, this can become unwieldly. The [`generate_inputs` utility script](https://github.com/ASAP-CRN/wf-common/blob/main/util/generate_inputs) may be used to automatically generate the inputs JSON (`inputs.{staging_env}.{cohort_dataset_id}.{date}.json`) and a sample list TSV (`{team_id}.{cohort_dataset_id}.sample_list.{date}.tsv`); same as the one generated in [the write_cohort_sample_list task](https://github.com/ASAP-CRN/wf-common/wdl/tasks/write_cohort_sample_list.wdl)). The script requires the libraries outlined in [the requirements.txt file](https://github.com/ASAP-CRN/wf-common/util/requirements.txt) and the following inputs:
 
-- `project-tsv`: One or more project TSVs with one row per sample and columns team_id, ASAP_dataset_id, ASAP_sample_id, batch, fastq_R1s, fastq_R2s, fastq_R3s, fastq_I1s, fastq_I2s, embargoed, source, modality_flavour, dataset_DOI_url, and SPATIAL columns if applicable: geomx_config, geomx_dsp_config, geomx_annotation_file, visium_cytassist, visium_probe_set, visium_slide_ref, and visium_capture_area. All samples from all projects may be included in the same project TSV, or multiple project TSVs may be provided.
+- `project-tsv`: One or more project TSVs with one row per sample and columns team_id, ASAP_dataset_id, ASAP_sample_id, batch, sex, fastq_R1s, fastq_R2s, fastq_R3s, fastq_I1s, fastq_I2s, embargoed, source, modality_flavour, dataset_DOI_url, and SPATIAL columns if applicable: geomx_config, geomx_dsp_config, geomx_annotation_file, visium_cytassist, visium_probe_set, visium_slide_ref, and visium_capture_area. All samples from all projects may be included in the same project TSV, or multiple project TSVs may be provided.
     - `team_id`: A unique identifier for the team from which the sample(s) arose.
     - `ASAP_dataset_id`: A generated unique identifier for the dataset from which the sample(s) arose.
     - `ASAP_sample_id`: A generated unique identifier for the sample within the project.
     - `batch`: The sample's batch.
+    - `sex`: The sample's sex.
     - `fastq_R1s`: The gs uri to read 1 of sample FASTQ.
         - This is appended to the `project-tsv` from the `fastq-locs-txt`: FASTQ locations for all samples provided in the `project-tsv`. Each sample is expected to have one set of paired fastqs located at `${fastq_path}/${sample_id}*`. The read 1 file should include 'R1' somewhere in the filename. Generate this file e.g. by running `gcloud storage ls gs://fastq_bucket/some/path/**.fastq.gz >> fastq_locs.txt`.
     - `fastq_R2s`: The gs uri to read 2 of sample FASTQ.
@@ -211,49 +213,58 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${cohort_id}.groups.umap.png
             │   └── MANIFEST.tsv
             ├── preprocess
-            │   ├── ${sampleA_id}.filtered_feature_bc_matrix.h5
-            │   ├── ${sampleA_id}.metrics_summary.csv
-            │   ├── ${sampleA_id}.molecule_info.h5
-            │   ├── ${sampleA_id}.raw_feature_bc_matrix.h5
-            │   ├── ${sampleA_id}.cellbender_report.html
-            │   ├── ${sampleA_id}.cellbender_metrics.csv
-            │   ├── ${sampleA_id}.cellbender_filtered.h5
-            │   ├── ${sampleA_id}.cellbender_ckpt.tar.gz
-            │   ├── ${sampleA_id}.cellbender_cell_barcodes.csv
-            │   ├── ${sampleA_id}.cellbender.pdf
-            │   ├── ${sampleA_id}.cellbender.log
-            │   ├── ${sampleA_id}.cellbender.h5
-            │   ├── ${sampleA_id}.cellbender_posterior.h5
-            │   ├── ${sampleA_id}.cleaned_unfiltered.h5ad
-            │   ├── ${sampleB_id}.filtered_feature_bc_matrix.h5
-            │   ├── ${sampleB_id}.metrics_summary.csv
-            │   ├── ${sampleB_id}.molecule_info.h5
-            │   ├── ${sampleB_id}.raw_feature_bc_matrix.h5
-            │   ├── ${sampleB_id}.cellbender_report.html
-            │   ├── ${sampleB_id}.cellbender_metrics.csv
-            │   ├── ${sampleB_id}.cellbender_filtered.h5
-            │   ├── ${sampleB_id}.cellbender_ckpt.tar.gz
-            │   ├── ${sampleB_id}.cellbender_cell_barcodes.csv
-            │   ├── ${sampleB_id}.cellbender.pdf
-            │   ├── ${sampleB_id}.cellbender.log
-            │   ├── ${sampleB_id}.cellbender.h5
-            │   ├── ${sampleB_id}.cellbender_posterior.h5
-            │   ├── ${sampleB_id}.cleaned_unfiltered.h5ad
+            │   ├── ${dataset_id}.${sampleA_id}.cellranger_sc_rnaseq_outputs.tar.gz
+            │   ├── ${dataset_id}.${sampleA_id}.filtered_feature_bc_matrix.h5
+            │   ├── ${dataset_id}.${sampleA_id}.metrics_summary.csv
+            │   ├── ${dataset_id}.${sampleA_id}.molecule_info.h5
+            │   ├── ${dataset_id}.${sampleA_id}.raw_feature_bc_matrix.h5
+            │   ├── ${dataset_id}.${sampleA_id}.possorted_genome_bam.bam
+            │   ├── ${dataset_id}.${sampleA_id}.possorted_genome_bam.bam.bai
+            │   ├── ${dataset_id}.${sampleA_id}.cellbender_report.html
+            │   ├── ${dataset_id}.${sampleA_id}.cellbender_metrics.csv
+            │   ├── ${dataset_id}.${sampleA_id}.cellbender_filtered.h5
+            │   ├── ${dataset_id}.${sampleA_id}.cellbender_ckpt.tar.gz
+            │   ├── ${dataset_id}.${sampleA_id}.cellbender_cell_barcodes.csv
+            │   ├── ${dataset_id}.${sampleA_id}.cellbender.pdf
+            │   ├── ${dataset_id}.${sampleA_id}.cellbender.log
+            │   ├── ${dataset_id}.${sampleA_id}.cellbender.h5
+            │   ├── ${dataset_id}.${sampleA_id}.cellbender_posterior.h5
+            │   ├── ${dataset_id}.${sampleA_id}.cleaned_unfiltered.h5ad
+            │   ├── ${dataset_id}.${sampleB_id}.cellranger_sc_rnaseq_outputs.tar.gz
+            │   ├── ${dataset_id}.${sampleB_id}.filtered_feature_bc_matrix.h5
+            │   ├── ${dataset_id}.${sampleB_id}.metrics_summary.csv
+            │   ├── ${dataset_id}.${sampleB_id}.molecule_info.h5
+            │   ├── ${dataset_id}.${sampleB_id}.raw_feature_bc_matrix.h5
+            │   ├── ${dataset_id}.${sampleB_id}.possorted_genome_bam.bam
+            │   ├── ${dataset_id}.${sampleB_id}.possorted_genome_bam.bam.bai
+            │   ├── ${dataset_id}.${sampleB_id}.cellbender_report.html
+            │   ├── ${dataset_id}.${sampleB_id}.cellbender_metrics.csv
+            │   ├── ${dataset_id}.${sampleB_id}.cellbender_filtered.h5
+            │   ├── ${dataset_id}.${sampleB_id}.cellbender_ckpt.tar.gz
+            │   ├── ${dataset_id}.${sampleB_id}.cellbender_cell_barcodes.csv
+            │   ├── ${dataset_id}.${sampleB_id}.cellbender.pdf
+            │   ├── ${dataset_id}.${sampleB_id}.cellbender.log
+            │   ├── ${dataset_id}.${sampleB_id}.cellbender.h5
+            │   ├── ${dataset_id}.${sampleB_id}.cellbender_posterior.h5
+            │   ├── ${dataset_id}.${sampleB_id}.cleaned_unfiltered.h5ad
             │   ├── ...
-            │   ├── ${sampleN_id}.filtered_feature_bc_matrix.h5
-            │   ├── ${sampleN_id}.metrics_summary.csv
-            │   ├── ${sampleN_id}.molecule_info.h5
-            │   ├── ${sampleN_id}.raw_feature_bc_matrix.h5
-            │   ├── ${sampleN_id}.cellbender_report.html
-            │   ├── ${sampleN_id}.cellbender_metrics.csv
-            │   ├── ${sampleN_id}.cellbender_filtered.h5
-            │   ├── ${sampleN_id}.cellbender_ckpt.tar.gz
-            │   ├── ${sampleN_id}.cellbender_cell_barcodes.csv
-            │   ├── ${sampleN_id}.cellbender.pdf
-            │   ├── ${sampleN_id}.cellbender.log
-            │   ├── ${sampleN_id}.cellbender.h5
-            │   ├── ${sampleN_id}.cellbender_posterior.h5
-            │   ├── ${sampleN_id}.cleaned_unfiltered.h5ad
+            │   ├── ${dataset_id}.${sampleN_id}.cellranger_sc_rnaseq_outputs.tar.gz
+            │   ├── ${dataset_id}.${sampleN_id}.filtered_feature_bc_matrix.h5
+            │   ├── ${dataset_id}.${sampleN_id}.metrics_summary.csv
+            │   ├── ${dataset_id}.${sampleN_id}.molecule_info.h5
+            │   ├── ${dataset_id}.${sampleN_id}.raw_feature_bc_matrix.h5
+            │   ├── ${dataset_id}.${sampleN_id}.possorted_genome_bam.bam
+            │   ├── ${dataset_id}.${sampleN_id}.possorted_genome_bam.bam.bai
+            │   ├── ${dataset_id}.${sampleN_id}.cellbender_report.html
+            │   ├── ${dataset_id}.${sampleN_id}.cellbender_metrics.csv
+            │   ├── ${dataset_id}.${sampleN_id}.cellbender_filtered.h5
+            │   ├── ${dataset_id}.${sampleN_id}.cellbender_ckpt.tar.gz
+            │   ├── ${dataset_id}.${sampleN_id}.cellbender_cell_barcodes.csv
+            │   ├── ${dataset_id}.${sampleN_id}.cellbender.pdf
+            │   ├── ${dataset_id}.${sampleN_id}.cellbender.log
+            │   ├── ${dataset_id}.${sampleN_id}.cellbender.h5
+            │   ├── ${dataset_id}.${sampleN_id}.cellbender_posterior.h5
+            │   ├── ${dataset_id}.${sampleN_id}.cleaned_unfiltered.h5ad
             │   └── MANIFEST.tsv
             ├── workflow_version # plain text file
             └── workflow_metadata
@@ -349,7 +360,7 @@ Docker images can be build using the [`build_docker_images`](https://github.com/
 | Image | Major tool versions | Links |
 | :- | :- | :- |
 | cellbender | <ul><li>[cellbender v0.3.0](https://github.com/broadinstitute/CellBender/releases/tag/v0.3.0)</li><li>[google-cloud-cli 397.0.0](https://cloud.google.com/sdk/docs/release-notes#39700_2022-08-09)</li><li>[python 3.7.16](https://www.python.org/downloads/release/python-3716/)</li><li>[miniconda 23.1.0](https://docs.anaconda.com/miniconda/miniconda-release-notes/)</li><li>[cuda 11.4.0](https://developer.nvidia.com/cuda-11-4-0-download-archive)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/cellbender) |
-| cellranger | <ul><li>[cellranger v7.1.0](https://www.10xgenomics.com/support/software/cell-ranger/latest/release-notes/cr-release-notes#v7-1-0)</li><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/cellranger) |
+| cellranger | <ul><li>[cellranger v10.1.0](https://www.10xgenomics.com/support/software/cell-ranger/latest/release-notes/cr-release-notes#v10-1-0)</li><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/cellranger) |
 | sc_tools | <ul><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li><li>[python 3.10.12](https://www.python.org/downloads/release/python-31012/)</li><li>[torch 2.6.0](https://github.com/pytorch/pytorch/releases/tag/v2.6.0)</li></ul> Python libraries: <ul><li>[scvi-tools 1.3.2](https://github.com/scverse/scvi-tools/releases/tag/1.3.2)</li><li>argparse 1.4.0</li><li>[scanpy 1.11.3](https://scanpy.readthedocs.io/en/stable/release-notes/index.html#v1-11-3)</li><li>muon 0.1.7</li><li>tables 3.10.1</li><li>scrublet 0.2.3</li><li>[scikit-learn 1.7.0](https://github.com/scikit-learn/scikit-learn/releases/tag/1.7.0)</li><li>[harmonypy 0.0.10](https://github.com/slowkow/harmonypy/releases/tag/v0.0.10)</li><li>[scib-metrics 0.5.6](https://github.com/YosefLab/scib-metrics/releases/tag/v0.5.6)</li><li>[cell_type_mapper 1.5.3](https://github.com/AllenInstitute/cell_type_mapper/releases/tag/v1.5.3)</li></ul>| [Dockerfile](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/sc_tools) |
 | util | <ul><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/wf-common/tree/main/docker/util) |
 | DEPRECATED - multiome | <ul><li>[google-cloud-cli 444.0.0](https://cloud.google.com/sdk/docs/release-notes#44400_2023-08-22)</li><li>[multiome seuratv4 environment](https://github.com/shahrozeabbas/Multiome-SeuratV4/tree/main)</li><li>[R scripts](https://github.com/shahrozeabbas/Harmony-RNA-Workflow/tree/main/scripts)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/multiome) |
@@ -369,7 +380,7 @@ In general, `wdl-ci` will use inputs provided in the [wdl-ci.config.json](./wdl-
 
 | Genome | Cell Ranger reference | Link |
 | :- | :- | :- |
-| Human GRCh38 (GENCODE v32/Ensembl98 annotations) | 2020-A | https://www.10xgenomics.com/support/software/cell-ranger/latest/release-notes/cr-reference-release-notes#2020-a |
+| Human GRCh38 (GENCODE v44/Ensembl110 annotations) | 2024-A | https://www.10xgenomics.com/support/software/cell-ranger/latest/release-notes/cr-reference-release-notes#2024-a |
 | Mouse GRCm39 (GENCODE vM33/Ensembl110 annotations) | 2024-A | https://www.10xgenomics.com/support/software/cell-ranger/latest/release-notes/cr-reference-release-notes#2024-a |
 
 ### Allen Brain Institute's MapMyCells references
@@ -378,7 +389,7 @@ In general, `wdl-ci` will use inputs provided in the [wdl-ci.config.json](./wdl-
 
 | Taxonomy | Description | Link |
 | :- | :- | :- |
-| 10x Human MTG SEA-AD taxonomy (CCN20230505) | A high-resolution transcriptomic atlas of cell types from middle temporal gyrus from the SEA-AD aged human cohort that spans the spectrum of Alzheimer’s disease. Source file used is `precomputed_stats.20231120.sea_ad.MTG.h5`. | https://allen-brain-cell-atlas.s3-us-west-2.amazonaws.com/mapmycells/SEAAD/20240831/. |
+| 10x Human MTG SEA-AD taxonomy (CCN20230505) | A high-resolution transcriptomic atlas of cell types from middle temporal gyrus from the SEA-AD aged human cohort that spans the spectrum of Alzheimer’s disease. Source file used is `precomputed_stats.20231120.sea_ad.MTG.h5`. | https://allen-brain-cell-atlas.s3.us-west-2.amazonaws.com/index.html#mapmycells/SEAAD-taxonomy/20240831/. |
 | 10x Whole mouse brain taxonomy (CCN20230722) | A high-resolution transcriptomic and spatial atlas of cell types in the whole mouse brain. Source files used are `precomputed_stats_ABC_revision_230821.h5` and `mouse_markers_230821.json`. | https://allen-brain-cell-atlas.s3.us-west-2.amazonaws.com/index.html#mapmycells/WMB-10X/20240831/. |
 
 

@@ -394,8 +394,9 @@ task merge_and_plot_qc_metrics {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.1"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -453,8 +454,9 @@ task filter {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.1"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -529,8 +531,9 @@ task map_cell_types {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.1"
 		cpu: threads
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -608,7 +611,7 @@ task normalize {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.1"
 		cpu: threads
 		cpuPlatform: "AMD Rome"
 		memory: "~{mem_gb} GB"
@@ -678,8 +681,9 @@ task add_mapped_cell_types {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.1"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -745,7 +749,7 @@ task integrate_harmony {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.1"
 		cpu: 8
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
@@ -818,8 +822,9 @@ task artifact_metrics {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.1"
 		cpu: 16
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		bootDiskSizeGb: 40
@@ -888,8 +893,9 @@ task plot_groups_and_features {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.1.0"
+		docker: "~{container_registry}/sc_tools:1.2.1"
 		cpu: 2
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
