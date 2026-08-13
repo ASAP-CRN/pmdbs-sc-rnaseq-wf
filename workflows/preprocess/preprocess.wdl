@@ -27,7 +27,7 @@ workflow preprocess {
 
 	# Task and subworkflow versions
 	String sub_workflow_name = "preprocess"
-	String cellranger_task_version = "3.0.0"
+	String cellranger_task_version = "2.0.0"
 	String cellbender_task_version = "1.0.1"
 	String adata_task_version = "1.2.0"
 
