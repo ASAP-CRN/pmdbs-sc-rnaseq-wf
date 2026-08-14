@@ -839,19 +839,17 @@
       "batch_key": "batch_id",
       "n_neighbors": 15,
       "leiden_res": [
-        0.05,
-        0.1,
         0.2,
-        0.4
+        0.5,
+        1.0
       ],
       "groups": [
         "sample",
         "batch",
         "cell_type",
-        "leiden_res_0.05",
-        "leiden_res_0.10",
         "leiden_res_0.20",
-        "leiden_res_0.40"
+        "leiden_res_0.50",
+        "leiden_res_1.0"
       ],
       "features": [
         "n_genes_by_counts",

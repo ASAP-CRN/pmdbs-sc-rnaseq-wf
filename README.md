@@ -68,8 +68,8 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | String? | scanvi_predictions_key | scANVI cell type predictions column name. ['C_scANVI'] |
 | String? | batch_key | Key in AnnData object for batch information. ['batch_id'] |
 | Int? | n_neighbors | The size of local neighborhood (in terms of number of neighboring data points) used for manifold approximation. [15] |
-| Array[Float]? | leiden_res | Leiden resolutions which are the parameter values controlling the coarseness of the clustering. [0.05, 0.1, 0.2, 0.4] |
-| Array[String]? | groups | Groups to produce umap plots for. ['sample', 'batch', 'cell_type', 'leiden_res_0.05', 'leiden_res_0.10', 'leiden_res_0.20', 'leiden_res_0.40'] |
+| Array[Float]? | leiden_res | Leiden resolutions which are the parameter values controlling the coarseness of the clustering. [0.2, 0.5, 1.0] |
+| Array[String]? | groups | Groups to produce umap plots for. ['sample', 'batch', 'cell_type', 'leiden_res_0.20', 'leiden_res_0.50', 'leiden_res_1.0'] |
 | Array[String]? | features | Features to produce umap plots for. ['n_genes_by_counts', 'total_counts', 'pct_counts_mt', 'pct_counts_rb', 'doublet_score', 'S_score', 'G2M_score'] |
 | Boolean? | run_cross_team_cohort_analysis | Whether to run downstream harmonization steps on all samples across projects. If set to false, only preprocessing steps (cellranger and generating the initial adata object(s)) will run for samples. [false] |
 | String | cohort_raw_data_bucket | Bucket to upload cross-team cohort intermediate files to. |
