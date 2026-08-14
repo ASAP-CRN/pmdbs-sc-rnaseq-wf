@@ -55,9 +55,9 @@ workflow sc_rnaseq_analysis {
 	}
 
 	String workflow_execution_path = "workflow_execution"
-	String workflow_version = "v4.1.0"
+	String workflow_version = "v5.0.0"
 	String workflow_release = "https://github.com/ASAP-CRN/sc-rnaseq-wf/releases/tag/sc_rnaseq_analysis-~{workflow_version}"
-	String crn_release_version = "v5.1.0"
+	String crn_release_version = "v6.0.0"
 
 	call get_workflow_name {
 		input:
