@@ -389,7 +389,7 @@ In general, `wdl-ci` will use inputs provided in the [wdl-ci.config.json](./wdl-
 
 | Taxonomy | Description | Link |
 | :- | :- | :- |
-| 10x Human MTG SEA-AD taxonomy (CCN20230505) | A high-resolution transcriptomic atlas of cell types from middle temporal gyrus from the SEA-AD aged human cohort that spans the spectrum of Alzheimer’s disease. Source file used is `precomputed_stats.20231120.sea_ad.MTG.h5`. | https://allen-brain-cell-atlas.s3.us-west-2.amazonaws.com/index.html#mapmycells/SEAAD-taxonomy/20240831/. |
+| 10x Whole human brain taxonomy (CCN20240330) | Transcriptomic diversity of cell types in adult human brain. Source file used is `precomputed_stats.siletti.training.h5`. | https://allen-brain-cell-atlas.s3.us-west-2.amazonaws.com/index.html#mapmycells/WHB-10Xv3/20240831/. |
 | 10x Whole mouse brain taxonomy (CCN20230722) | A high-resolution transcriptomic and spatial atlas of cell types in the whole mouse brain. Source files used are `precomputed_stats_ABC_revision_230821.h5` and `mouse_markers_230821.json`. | https://allen-brain-cell-atlas.s3.us-west-2.amazonaws.com/index.html#mapmycells/WMB-10X/20240831/. |
 
 
